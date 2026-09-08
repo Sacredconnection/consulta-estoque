@@ -68,3 +68,22 @@ test("unknown hosts and incomplete pairs never become connections",()=>{
 test("redirects are rejected without forwarding authorization to another origin",async()=>{
  let count=0;await assert.rejects(()=>wooPage("sacred",credentials,"products",{},(async(_url,options)=>{count++;assert.equal(options?.redirect,"manual");return new Response(null,{status:302,headers:{Location:"https://other.example"}});}) as typeof fetch),/redirecionou/);assert.equal(count,1);
 });
+
+import {scopeProductsToStores} from "../lib/inventory";
+test("unconfigured shops and their historical stock are removed from totals and recommendations",()=>{
+ const scoped=scopeProductsToStores(DEMO_PRODUCTS,["sacred","maya"]);
+ assert.ok(scoped.every(p=>p.stocks.every(s=>s.storeId!=="sc23")));
+ assert.ok(recommendations(scoped,DEFAULT_RULE).every(r=>r.stock.storeId!=="sc23"));
+ assert.deepEqual(scopeProductsToStores(DEMO_PRODUCTS,[]),[]);
+ assert.equal(DEMO_PRODUCTS[0].stocks.length,3);
+});
+test("agent does not return stores missing configuration or fabricate demo data when no stores exist",()=>{
+ assert.equal(agentAnswer(DEMO_PRODUCTS,DEFAULT_RULE,"estoque de Tsunu na SC23",["sacred","maya"]).products.length,0);
+ assert.equal(agentAnswer(DEMO_PRODUCTS,DEFAULT_RULE,"estoque de Tsunu",[]).products.length,0);
+ assert.equal(agentAnswer(DEMO_PRODUCTS,DEFAULT_RULE,"estoque de Tsunu",["sacred"]).products[0].stocks.length,1);
+});
+test("safe WooCommerce diagnostic preserves HTTP status and recognized cause without raw payloads",async()=>{
+ await assert.rejects(()=>wooPage("maya",credentials,"products",{},(async()=>Response.json({code:"woocommerce_rest_authentication_error",message:"Consumer key is invalid"},{status:401})) as typeof fetch),e=>{
+  const m=(e as Error).message;assert.match(m,/HTTP 401/);assert.match(m,/woocommerce_rest_authentication_error/);assert.match(m,/Consumer key é inválida/);return true;
+ });
+});

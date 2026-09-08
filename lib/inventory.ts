@@ -39,10 +39,16 @@ export function recommendations(products: Product[],rule: Rule) {
     product,stock,quantity:Math.max(0,rule.target-Math.max(0,stock.quantity!)),
   }))).sort((a,b)=>a.stock.quantity!-b.stock.quantity!);
 }
-export function agentAnswer(products: Product[],rule: Rule,message: string) {
+export function scopeProductsToStores(products:Product[],ids:readonly StoreId[]):Product[]{
+ const allowed=new Set(ids);
+ return products.map(p=>({...p,stocks:p.stocks.filter(s=>allowed.has(s.storeId))})).filter(p=>p.stocks.length>0);
+}
+export function agentAnswer(products: Product[],rule: Rule,message: string,storeIds:readonly StoreId[]=STORES.map(s=>s.id)) {
   const question=normalize(message);
   const store=STORES.find(s=>question.includes(normalize(s.short))||question.includes(normalize(s.name)));
-  const scoped=products.map(p=>({...p,stocks:p.stocks.filter(s=>!store||s.storeId===store.id)}));
+  if(!storeIds.length)return {text:"Nenhuma loja possui integração configurada no ambiente local.",products:[],kind:"stock"};
+  if(store&&!storeIds.includes(store.id))return {text:"Essa loja não possui integração configurada no ambiente local.",products:[],kind:"stock"};
+  const scoped=scopeProductsToStores(products,store?storeIds.filter(id=>id===store.id):storeIds);
   if(/repor|reposicao|comprar|estoque baixo|baixos|acabando|zerados|esgotados|sem estoque/.test(question)){
     const rec=recommendations(scoped,rule).filter(r=>!/zerados|esgotados|sem estoque/.test(question)||r.stock.quantity!<=0);
     return {text:rec.length?`Encontrei ${rec.length} posições de estoque que precisam de atenção. A sugestão completa até ${rule.target} unidades por loja, com mínimo de ${rule.minimum}. Não considera previsão de vendas nem pedidos em trânsito.`:"Nenhuma posição com estoque conhecido atende a esse filtro.", products:Array.from(new Map(rec.map(r=>[r.product.key,r.product])).values()), kind:"replenishment"};

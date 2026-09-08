@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { environmentConnections, type EnvironmentValues } from "./connections-env";
-import { STORES, DEFAULT_RULE, type Rule, type Product, type StoreId } from "./inventory";
+import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
 import { IntegrationError, readCatalog, mergeCatalog } from "./woo";
 type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
@@ -44,8 +44,9 @@ export async function state(){
  const configured=await ensureEnvironmentConnections();
  const [rows,rule]=await Promise.all([db.prepare("SELECT id,credentials,snapshot,last_sync,error FROM connections").all<Connection>(),getRule()]);
  const records=await db.prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot").all<{payload:string}>();
- const products=mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product));
- return {demo:rows.results.length===0,products,rule,connections:STORES.map(s=>{const c=rows.results.find(r=>r.id===s.id);const source="environment";const available=configured.some(e=>e.id===s.id);return{id:s.id,connected:available,source,lastSync:c?.last_sync??null,error:c&&!available?"Credenciais removidas do ambiente.":c?.error??null};})};
+ const activeStores=STORES.filter(s=>configured.some(c=>c.id===s.id));
+ const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product)),activeStores.map(s=>s.id));
+ return {demo:false,products,rule,connections:activeStores.map(s=>{const c=rows.results.find(r=>r.id===s.id);const source="environment";const available=configured.some(e=>e.id===s.id);return{id:s.id,connected:available,source,lastSync:c?.last_sync??null,error:c&&!available?"Credenciais removidas do ambiente.":c?.error??null};})};
 }
 async function syncStore(storeId:StoreId){
  const db=database(),token=crypto.randomUUID();

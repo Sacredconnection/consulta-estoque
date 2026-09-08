@@ -31,7 +31,8 @@ O banco D1 guarda snapshots, status e regras, sem as chaves das lojas. A coluna 
 - Agente: consultas guiadas de produto/SKU, estoque baixo e reposição.
 - Reposição: sugestões por nível mínimo e exportação CSV.
 - Automações: mínimo, estoque desejado e intervalo de atualização.
-- Conexões: apenas leitura do status.
+- Conexões: apenas leitura do status. Lojas sem par de credenciais no ambiente ficam ocultas em todas as telas e respostas do agente.
+- Sem nenhuma loja configurada, o painel mostra um estado vazio, sem dados de demonstração.
 
 ## Regras de estoque
 - API REST v3 por HTTPS, Basic Auth somente no servidor e origens fixas. Redirecionamentos não são seguidos.
@@ -48,8 +49,8 @@ scripts/sync-job.mjs e POST /api/jobs/sync preparam a integração com cron, mas
 
 ## Validação em 08/09/2026
 - Sacred Snuff: autenticação e sincronização reais concluídas; 937 registros de produtos e variações. Consulta do agente validada com dados reais.
-- Maya Herbs: HTTP 401; revisar suas credenciais no arquivo local.
-- SC23 Trading: sem credenciais no arquivo.
+- Maya Herbs: o teste mais recente com o arquivo local retornou HTTP 200. O 401 anterior não tinha detalhes preservados suficientes para determinar a causa.
+- SC23 Trading: sem credenciais no arquivo; loja ocultada.
 - Testes: node scripts/test.mjs
 - Tipos: npx tsc --noEmit
 - Produção: npm run build
