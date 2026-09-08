@@ -124,3 +124,58 @@ test("incrementally collected duplicate SKUs stay isolated within their store",(
  const other=toRecord("sacred",{id:3,sku:"DUP"},"now");
  const merged=mergeCatalog([first,second,other]);assert.equal(merged.length,3);assert.ok(merged.every(p=>p.stocks.length===1));
 });
+
+import {netGrams,packaging} from "../lib/packaging";
+import {formatStockMessage} from "../lib/stock-message";
+test("net mass accepts store labels and decimal kg but rejects ambiguous packs",()=>{
+ for(const [text,grams] of [["5gr",5],["10 g",10],["20 grams",20],["50gr",50],["250gr",250],["0,5 kg",500],["1.25kg",1250]] as const)assert.equal(netGrams(text),grams);
+ for(const text of ["10 x 50g","kit 50g","50g / 100g","100ml","SKU250","100"])assert.equal(netGrams(text),null);
+ for(const g of [5,10,20,50])assert.equal(packaging({id:1,attributes:[{name:"Weight",option:g+"gr"}]}).packaging,"can");
+ assert.deepEqual(packaging({id:1,attributes:[{name:"Weight",option:"250gr"}]}),{grams:250,packaging:"bulk"});
+ assert.deepEqual(packaging({id:1,name:"Herb",weight:"0.5"} as any),{grams:null,packaging:"other"});
+ assert.equal(packaging({id:1,attributes:[{name:"Weight",option:"10gr"}],weight:"0.05"} as any).grams,10);
+});
+test("formatted response separates cans and sums each bulk variant by store without unknowns",()=>{
+ const parent={id:1,name:"Tsunu",type:"variable",manage_stock:false};
+ const make=(store: "maya"|"sacred",id:number,weight:string,quantity:number|null)=>toRecord(store,{id,manage_stock:true,stock_quantity:quantity,attributes:[{name:"Weight",option:weight}]},"now",parent);
+ const products=[make("maya",2,"10gr",82),make("maya",3,"250gr",14),make("maya",4,"500gr",24),make("maya",5,"1kg",null),make("sacred",6,"100gr",10)];
+ const text=formatStockMessage(products,["sacred","maya"]);
+ assert.match(text,/Latas/);assert.match(text,/Granel \(atacado\)/);assert.match(text,/250gr: \*\*14 un\.\*\* × 0,25 kg = \*\*3,5 kg\*\*/);
+ assert.match(text,/Maya Herbs: 15,5 kg \(parcial\)/);assert.match(text,/16,5 kg \(parcial\)/);assert.match(text,/quantidade não informada/);
+ assert.doesNotMatch(text,/16,32|17,32/);
+});
+test("shared balances and unidentified weights never inflate kg totals",()=>{
+ const parent={id:1,name:"Tsunu",type:"variable",manage_stock:true,stock_quantity:30};
+ const records=[toRecord("maya",parent,"now"),toRecord("maya",{id:2,manage_stock:"parent",attributes:[{option:"500gr"}]},"now",parent)];
+ const text=formatStockMessage(records,["maya"]);
+ assert.match(text,/Estoque compartilhado/);assert.match(text,/não entram no total em kg/);assert.doesNotMatch(text,/15 kg/);
+});
+test("same SKU across stores retains each store's name, net mass and grouping",()=>{
+ const a=toRecord("sacred",{id:1,name:"Local Tsunu",sku:"SAME",manage_stock:true,stock_quantity:3,attributes:[{option:"100gr"}]},"now");
+ const b=toRecord("maya",{id:2,name:"English Tsunu",sku:"SAME",manage_stock:true,stock_quantity:4,attributes:[{option:"250gr"}]},"now");
+ const text=formatStockMessage(mergeCatalog([a,b]),["sacred","maya"]);
+ assert.match(text,/Local Tsunu/);assert.match(text,/English Tsunu/);assert.match(text,/Sacred Snuff: 0,3 kg/);assert.match(text,/Maya Herbs: 1 kg/);
+});
+test("Maya always requests English on both product and variation pagination",async()=>{
+ let calls=0;
+ const request=(async(input:RequestInfo|URL)=>{
+  const url=new URL(String(input));assert.equal(url.searchParams.get("lang"),"en");calls++;
+  return Response.json(url.pathname.endsWith("/variations")?[{id:2,lang:"en",attributes:[{option:"250gr"}]}]:[{id:1,lang:"en",translations:{en:1,fr:3},type:"variable",name:"English"}]);
+ }) as typeof fetch;
+ const result=await advanceCatalog("maya",credentials,initialCursor(),request);
+ assert.equal(calls,2);assert.equal(result.records.length,1);assert.equal(result.records[0].stocks[0].productName,"English");
+ await wooPage("maya",credentials,"products",{lang:"fr"},request);
+ await wooPage("sacred",credentials,"products",{},(async(input)=>{assert.equal(new URL(String(input)).searchParams.has("lang"),false);return Response.json([]);}) as typeof fetch);
+});
+test("Maya fails closed if API ignores the requested language",async()=>{
+ for(const item of [{id:1,lang:"fr"}]){
+  await assert.rejects(()=>wooPage("maya",credentials,"products",{},(async()=>Response.json([item])) as typeof fetch),/fora do inglês/);
+ }
+});
+
+test("Polylang English aliases are excluded without ending pagination early",async()=>{
+ const request=(async(input:RequestInfo|URL)=>{const page=Number(new URL(String(input)).searchParams.get("page"));return Response.json(page===1?Array.from({length:100},(_,i)=>({id:i+1,lang:"en",translations:{en:i===0?2:i+1}})):[{id:101,lang:"en"}]);}) as typeof fetch;
+ const records=[];for await(const page of wooPages("maya",credentials,"products",request))records.push(...page);
+ assert.equal(records.length,100);assert.ok(!records.some(p=>p.id===1));assert.ok(records.some(p=>p.id===101));
+ const first=await advanceCatalog("maya",credentials,initialCursor(),request);assert.equal(first.done,false);assert.equal(first.cursor.productsSeen,100);assert.equal(first.cursor.productsDone,100);
+});

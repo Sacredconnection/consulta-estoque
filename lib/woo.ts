@@ -1,11 +1,14 @@
 import { STORES, type Product, type StoreId, type Stock } from "./inventory";
-export type WooProduct={id:number;name?:string;sku?:string;type?:string;manage_stock?:boolean|"parent";stock_quantity?:number|null;stock_status?:string;categories?:{name:string}[];attributes?:{option:string}[];variations?:number[]};
+import { CATALOG_VERSION } from "./catalog-policy";
+import { packaging } from "./packaging";
+export type WooProduct={id:number;name?:string;sku?:string;type?:string;manage_stock?:boolean|"parent";stock_quantity?:number|null;stock_status?:string;categories?:{name:string}[];lang?:string;translations?:Record<string,number>;attributes?:{name?:string;slug?:string;option?:string;options?:string[]}[];variations?:number[]};
 export type Credentials={key:string;secret:string};
 export class IntegrationError extends Error {}
 export async function wooPage(storeId:StoreId,credentials:Credentials,path:string,params:Record<string,string>={},request:typeof fetch=fetch){
  const store=STORES.find(s=>s.id===storeId);if(!store)throw new IntegrationError("Loja inválida.");
  const url=new URL("https://"+store.host+"/wp-json/wc/v3/"+path);
  for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);
+ if(storeId==="maya")url.searchParams.set("lang","en");
  let response:Response;
  try{response=await request(url,{headers:{Authorization:"Basic "+btoa(credentials.key+":"+credentials.secret),Accept:"application/json"},redirect:"manual",signal:AbortSignal.timeout(20000)});}
  catch{throw new IntegrationError("A loja não respondeu em até 20 segundos. Verifique a disponibilidade da API.");}
@@ -23,13 +26,15 @@ export async function wooPage(storeId:StoreId,credentials:Credentials,path:strin
  }
  let body:unknown;try{body=await response.json();}catch{throw new IntegrationError("A loja retornou um formato inválido. Verifique o acesso à API REST.");}
  if(!Array.isArray(body)||body.some(p=>!p||!Number.isSafeInteger(p.id)||p.id<=0))throw new IntegrationError("O catálogo retornado pela loja não é válido.");
- return {items:body as WooProduct[],pages:Number(response.headers.get("X-WP-TotalPages")||0),total:Number(response.headers.get("X-WP-Total")||0)};
+ if(storeId==="maya"&&(body as WooProduct[]).some(p=>p.lang&&p.lang!=="en"))throw new IntegrationError("A Maya retornou traduções fora do inglês apesar do filtro. O catálogo anterior foi preservado.");
+ const items=(body as WooProduct[]).filter(p=>storeId!=="maya"||!p.translations?.en||p.translations.en===p.id);
+ return {items,count:body.length,pages:Number(response.headers.get("X-WP-TotalPages")||0),total:Number(response.headers.get("X-WP-Total")||0)};
 }
 export async function* wooPages(storeId:StoreId,credentials:Credentials,path:string,request:typeof fetch=fetch){
  for(let page=1;page<=100;page++){
-  const {items,pages}=await wooPage(storeId,credentials,path,{per_page:"100",page:String(page),orderby:"id",order:"asc",_fields:"id,name,sku,type,manage_stock,stock_quantity,stock_status,categories,attributes,variations"},request);
+  const {items,pages,count}=await wooPage(storeId,credentials,path,{per_page:"100",page:String(page),orderby:"id",order:"asc",_fields:"id,name,sku,type,manage_stock,stock_quantity,stock_status,categories,attributes,variations,lang,translations"},request);
   yield items;
-  if((pages>0&&page>=pages)||items.length<100)return;
+  if((pages>0&&page>=pages)||count<100)return;
  }
  throw new IntegrationError("O catálogo excede o limite de 10.000 itens por consulta. Nenhuma atualização parcial foi publicada.");
 }
@@ -43,8 +48,8 @@ export function toRecord(storeId:StoreId,p:WooProduct,at:string,parent?:WooProdu
  const pool=!parent&&p.type==="variable"&&p.manage_stock===true;
  const sku=(p.sku??"").trim();
  const key=pool?"pool:"+storeId+":"+p.id:sku?"sku:"+sku:"id:"+storeId+":"+p.id;
- const stock:Stock={storeId,id:p.id,quantity,status:source.stock_status??"unknown",updatedAt:at,...(shared?{shared:true}:{})};
- return {key,sku,name:name+(pool?" · estoque do produto pai":""),category:(parent?.categories??p.categories)?.map(c=>c.name).join(", ")||"Sem categoria",stocks:[stock]};
+ const stock:Stock={...packaging(p,parent),...(pool?{packaging:"shared" as const}:{}),parentId:parent?.id??p.id,productName:parent?.name??p.name??"Produto "+p.id,variationName:suffix,storeId,id:p.id,quantity,status:source.stock_status??"unknown",updatedAt:at,...(shared?{shared:true}:{})};
+ return {catalogVersion:CATALOG_VERSION,key,sku,name:name+(pool?" · estoque do produto pai":""),category:(parent?.categories??p.categories)?.map(c=>c.name).join(", ")||"Sem categoria",stocks:[stock]};
 }
 export async function readCatalog(storeId:StoreId,credentials:Credentials,at:string,request:typeof fetch=fetch){
  const records:Product[]=[];const ids=new Set<number>();

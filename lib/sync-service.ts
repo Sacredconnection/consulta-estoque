@@ -1,6 +1,7 @@
 import { database,configuredEnvironmentConnections,ensureEnvironmentConnections,getConnections,ApiError } from "./server";
 import { initialCursor,advanceCatalog,type CatalogCursor } from "./sync-cursor";
 import { IntegrationError } from "./woo";
+import { CATALOG_VERSION } from "./catalog-policy";
 import type { StoreId } from "./inventory";
 type Job={store_id:StoreId;run_id:string;status:string;cursor:string;started_at:string;updated_at:string;error:string|null};
 const owned="EXISTS (SELECT 1 FROM connections WHERE id=? AND lock_token=?)";
@@ -9,10 +10,11 @@ export async function startSynchronization(){
  if(!configured.length)throw new ApiError(400,"Configure uma loja no arquivo local de ambiente antes de sincronizar.");
  const current=await getConnections();
  // Repeated clicks or reloads resume an active run instead of restarting completed shops.
- if(current.some(c=>c.sync?.status==="running"))return {connections:current,message:"Atualização em andamento. Retomando do último progresso salvo."};
+ if(current.some(c=>c.sync?.status==="running")&&!current.some(c=>c.needsSync))return {connections:current,message:"Atualização em andamento. Retomando do último progresso salvo."};
  const at=new Date().toISOString();
  await database().batch(configured.flatMap(c=>[
-  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running'").bind(c.id,crypto.randomUUID(),"running",JSON.stringify(initialCursor()),at,at),
+  database().prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND COALESCE(json_extract(cursor,'$.catalogVersion'),0)!=?)").bind(c.id,c.id,CATALOG_VERSION),
+  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=?").bind(c.id,crypto.randomUUID(),"running",JSON.stringify(initialCursor()),at,at,CATALOG_VERSION),
   database().prepare("UPDATE connections SET error=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND status='running')").bind(c.id,c.id),
  ]));
  return {connections:await getConnections(),message:"Atualização iniciada. O progresso de cada loja será mostrado abaixo."};
@@ -25,7 +27,7 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
  if(!claim.meta.changes)return {busy:true,connections:await getConnections()};
  try{
   const job=await db.prepare("SELECT * FROM sync_jobs WHERE store_id=?").bind(storeId).first<Job>();
-  if(!job||job.run_id!==runId)throw new ApiError(409,"A execução foi substituída. Consulte o progresso atual.");
+  if(!job||job.run_id!==runId||JSON.parse(job.cursor).catalogVersion!==CATALOG_VERSION)throw new ApiError(409,"A execução foi substituída. Consulte o progresso atual.");
   if(job.status!=="running")return {busy:false,connections:await getConnections()};
   const previous=JSON.parse(job.cursor) as CatalogCursor;
   const result=await advanceCatalog(storeId,credentials,previous);

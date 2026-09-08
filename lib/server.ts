@@ -2,7 +2,8 @@ import { env } from "cloudflare:workers";
 import { environmentConnections, type EnvironmentValues } from "./connections-env";
 import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
 import { IntegrationError, mergeCatalog } from "./woo";
-type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number};
+import { CATALOG_VERSION } from "./catalog-policy";
+type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number;catalog_version:number|null};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 export function database(){return env.DB;}
 export function authorize(request:Request,mutation=false){
@@ -42,21 +43,22 @@ export async function ensureEnvironmentConnections(){
 export async function getConnections(){
  const configured=await ensureEnvironmentConnections(),db=database();
  const [rows,jobs]=await Promise.all([
-  db.prepare("SELECT id,snapshot,last_sync,error,lock_until FROM connections").all<Connection>(),
+  db.prepare("SELECT id,snapshot,last_sync,error,lock_until,(SELECT json_extract(payload,'$.catalogVersion') FROM records WHERE store_id=connections.id AND snapshot=connections.snapshot LIMIT 1) AS catalog_version FROM connections").all<Connection>(),
   db.prepare("SELECT store_id,run_id,status,cursor,updated_at,error FROM sync_jobs").all<{store_id:StoreId;run_id:string;status:string;cursor:string;updated_at:string;error:string|null}>(),
  ]);
  return STORES.filter(s=>configured.some(c=>c.id===s.id)).map(s=>{
   const c=rows.results.find(r=>r.id===s.id),job=jobs.results.find(j=>j.store_id===s.id);
-  const cursor=job?JSON.parse(job.cursor) as {productsDone:number;totalProducts:number;records:number}:null;
-  const running=job?.status==="running";
-  return {id:s.id,connected:true,source:"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
-   sync:job?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
+  const cursor=job?JSON.parse(job.cursor) as {catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
+  const needsSync=cursor?.catalogVersion!==CATALOG_VERSION;
+  const running=!needsSync&&job?.status==="running";
+  return {id:s.id,catalogReady:c?.catalog_version===CATALOG_VERSION||(!needsSync&&job?.status==="succeeded"),needsSync,connected:true,source:"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
+   sync:job&&!needsSync?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
  });
 }
 export async function state(){
  const [connections,rule]=await Promise.all([getConnections(),getRule()]);
  const ids=connections.map(c=>c.id);
  const records=ids.length?await database().prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot WHERE r.store_id IN ("+ids.map(()=>"?").join(",")+")").bind(...ids).all<{payload:string}>():{results:[]};
- const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product)),ids);
+ const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product).filter(p=>p.catalogVersion===CATALOG_VERSION)),ids);
  return {demo:false,products,rule,connections};
 }
