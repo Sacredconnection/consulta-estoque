@@ -39,3 +39,7 @@ next-env.d.ts
 
 !.env.example
 *.tsbuildinfo
+
+# Alternate local environment filename
+.local.nv
+env.local

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { environmentConnections, type EnvironmentValues } from "./connections-env";
 import { STORES, DEFAULT_RULE, type Rule, type Product, type StoreId } from "./inventory";
-import { IntegrationError, readCatalog, mergeCatalog, type Credentials } from "./woo";
+import { IntegrationError, readCatalog, mergeCatalog } from "./woo";
 type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 export function database(){return env.DB;}
@@ -25,22 +25,6 @@ export async function body(request:Request){
  const value=await request.text();if(value.length>5000)throw new ApiError(413,"Solicitação muito grande.");
  try{const parsed=JSON.parse(value);if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw Error();return parsed;}catch{throw new ApiError(400,"Dados inválidos.");}
 }
-const encode=(bytes:Uint8Array)=>btoa(String.fromCharCode(...bytes));
-const decode=(s:string)=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function encryptionKey(){
- const value=(env as unknown as {CREDENTIAL_KEY?:string}).CREDENTIAL_KEY;
- if(!value)throw new ApiError(503,"A proteção das credenciais ainda não foi configurada no servidor.");
- return crypto.subtle.importKey("raw",decode(value),"AES-GCM",false,["encrypt","decrypt"]);
-}
-export async function seal(storeId:string,value:Credentials){
- const key=await encryptionKey();const iv=crypto.getRandomValues(new Uint8Array(12));
- const encrypted=await crypto.subtle.encrypt({name:"AES-GCM",iv,additionalData:new TextEncoder().encode(storeId)},key,new TextEncoder().encode(JSON.stringify(value)));
- return encode(iv)+"."+encode(new Uint8Array(encrypted));
-}
-async function unseal(storeId:string,value:string):Promise<Credentials>{
- const [iv,cipher]=value.split(".");const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:decode(iv),additionalData:new TextEncoder().encode(storeId)},await encryptionKey(),decode(cipher));
- return JSON.parse(new TextDecoder().decode(plain));
-}
 export async function getRule():Promise<Rule>{
  const row=await database().prepare("SELECT payload FROM settings WHERE id = ?").bind("rule").first<{payload:string}>();
  return row?JSON.parse(row.payload):DEFAULT_RULE;
@@ -61,7 +45,7 @@ export async function state(){
  const [rows,rule]=await Promise.all([db.prepare("SELECT id,credentials,snapshot,last_sync,error FROM connections").all<Connection>(),getRule()]);
  const records=await db.prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot").all<{payload:string}>();
  const products=mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product));
- return {demo:rows.results.length===0,products,rule,connections:STORES.map(s=>{const c=rows.results.find(r=>r.id===s.id);const source=c?.credentials==="environment"?"environment":"manual";const available=!!c&&(source==="manual"||configured.some(e=>e.id===s.id));return{id:s.id,connected:available,source,lastSync:c?.last_sync??null,error:c&&!available?"Credenciais removidas do ambiente.":c?.error??null};})};
+ return {demo:rows.results.length===0,products,rule,connections:STORES.map(s=>{const c=rows.results.find(r=>r.id===s.id);const source="environment";const available=configured.some(e=>e.id===s.id);return{id:s.id,connected:available,source,lastSync:c?.last_sync??null,error:c&&!available?"Credenciais removidas do ambiente.":c?.error??null};})};
 }
 async function syncStore(storeId:StoreId){
  const db=database(),token=crypto.randomUUID();
@@ -72,8 +56,8 @@ async function syncStore(storeId:StoreId){
   if(!connection)throw new IntegrationError("A conexão não foi encontrada.");
   const at=new Date().toISOString();
   const environment=configuredEnvironmentConnections().find(c=>c.id===storeId);
-  if(connection.credentials==="environment"&&!environment)throw new IntegrationError("Credenciais da loja não estão disponíveis no ambiente.");
-  const credentials=environment??await unseal(storeId,connection.credentials);
+  if(!environment)throw new IntegrationError("Credenciais da loja não estão disponíveis no ambiente.");
+  const credentials=environment;
   const records=await readCatalog(storeId,credentials,at);
   const snapshot=crypto.randomUUID();
   for(let offset=0;offset<records.length;offset+=60){
@@ -94,9 +78,8 @@ async function syncStore(storeId:StoreId){
  }finally{await db.prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND lock_token=?").bind(storeId,token).run();}
 }
 export async function synchronize(){
- await ensureEnvironmentConnections();
- const rows=await database().prepare("SELECT id FROM connections").all<{id:StoreId}>();
- if(!rows.results.length)throw new ApiError(400,"Conecte uma loja antes de sincronizar.");
+ const configured=await ensureEnvironmentConnections();
+ if(!configured.length)throw new ApiError(400,"Configure uma loja no arquivo local de ambiente antes de sincronizar.");
  // Independent shops may fail without hiding the last successful snapshot.
- return Promise.all(rows.results.map(s=>syncStore(s.id)));
+ return Promise.all(configured.map(s=>syncStore(s.id)));
 }
