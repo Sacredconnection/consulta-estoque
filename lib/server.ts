@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { environmentConnections, type EnvironmentValues } from "./connections-env";
 import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
-import { IntegrationError, readCatalog, mergeCatalog } from "./woo";
+import { IntegrationError, mergeCatalog } from "./woo";
 type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 export function database(){return env.DB;}
@@ -32,55 +32,31 @@ export async function getRule():Promise<Rule>{
 export function configuredEnvironmentConnections(){
  return environmentConnections(env as unknown as EnvironmentValues);
 }
-async function ensureEnvironmentConnections(){
+export async function ensureEnvironmentConnections(){
  const configured=configuredEnvironmentConnections();
  if(configured.length)await database().batch(configured.map(c=>database().prepare(
   "INSERT INTO connections (id,credentials) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET credentials=excluded.credentials WHERE connections.credentials != excluded.credentials"
  ).bind(c.id,"environment")));
  return configured;
 }
+export async function getConnections(){
+ const configured=await ensureEnvironmentConnections(),db=database();
+ const [rows,jobs]=await Promise.all([
+  db.prepare("SELECT id,snapshot,last_sync,error,lock_until FROM connections").all<Connection>(),
+  db.prepare("SELECT store_id,run_id,status,cursor,updated_at,error FROM sync_jobs").all<{store_id:StoreId;run_id:string;status:string;cursor:string;updated_at:string;error:string|null}>(),
+ ]);
+ return STORES.filter(s=>configured.some(c=>c.id===s.id)).map(s=>{
+  const c=rows.results.find(r=>r.id===s.id),job=jobs.results.find(j=>j.store_id===s.id);
+  const cursor=job?JSON.parse(job.cursor) as {productsDone:number;totalProducts:number;records:number}:null;
+  const running=job?.status==="running";
+  return {id:s.id,connected:true,source:"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
+   sync:job?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
+ });
+}
 export async function state(){
- const db=database();
- const configured=await ensureEnvironmentConnections();
- const [rows,rule]=await Promise.all([db.prepare("SELECT id,credentials,snapshot,last_sync,error FROM connections").all<Connection>(),getRule()]);
- const records=await db.prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot").all<{payload:string}>();
- const activeStores=STORES.filter(s=>configured.some(c=>c.id===s.id));
- const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product)),activeStores.map(s=>s.id));
- return {demo:false,products,rule,connections:activeStores.map(s=>{const c=rows.results.find(r=>r.id===s.id);const source="environment";const available=configured.some(e=>e.id===s.id);return{id:s.id,connected:available,source,lastSync:c?.last_sync??null,error:c&&!available?"Credenciais removidas do ambiente.":c?.error??null};})};
-}
-async function syncStore(storeId:StoreId){
- const db=database(),token=crypto.randomUUID();
- const lock=await db.prepare("UPDATE connections SET lock_until=?,lock_token=? WHERE id=? AND lock_until < ?").bind(Date.now()+180000,token,storeId,Date.now()).run();
- if(!lock.meta.changes)return {id:storeId,ok:false,error:"Uma sincronização já está em andamento."};
- try{
-  const connection=await db.prepare("SELECT * FROM connections WHERE id=?").bind(storeId).first<Connection>();
-  if(!connection)throw new IntegrationError("A conexão não foi encontrada.");
-  const at=new Date().toISOString();
-  const environment=configuredEnvironmentConnections().find(c=>c.id===storeId);
-  if(!environment)throw new IntegrationError("Credenciais da loja não estão disponíveis no ambiente.");
-  const credentials=environment;
-  const records=await readCatalog(storeId,credentials,at);
-  const snapshot=crypto.randomUUID();
-  for(let offset=0;offset<records.length;offset+=60){
-   // Renew only our lease, and never publish if another job has taken over.
-   const renewed=await db.prepare("UPDATE connections SET lock_until=? WHERE id=? AND lock_token=?").bind(Date.now()+180000,storeId,token).run();
-   if(!renewed.meta.changes)throw new IntegrationError("A sincronização expirou. Tente novamente.");
-   await db.batch(records.slice(offset,offset+60).map(record=>db.prepare("INSERT INTO records (snapshot,store_id,product_id,payload) VALUES (?,?,?,?)").bind(snapshot,storeId,record.stocks[0].id,JSON.stringify(record))));
-  }
-  const published=await db.prepare("UPDATE connections SET snapshot=?,last_sync=?,error=NULL WHERE id=? AND lock_token=?").bind(snapshot,at,storeId,token).run();
-  if(!published.meta.changes)throw new IntegrationError("A sincronização expirou sem publicar os novos dados.");
-  // Keep current and previous snapshots to avoid deleting rows written by another in-flight job.
-  if(connection.snapshot)await db.prepare("DELETE FROM records WHERE store_id=? AND snapshot=?").bind(storeId,connection.snapshot).run();
-  return {id:storeId,ok:true,count:records.length};
- }catch(e){
-  const message=e instanceof IntegrationError?e.message:"Não foi possível atualizar esta loja. Verifique a conexão.";
-  await db.prepare("UPDATE connections SET error=? WHERE id=? AND lock_token=?").bind(message,storeId,token).run();
-  return {id:storeId,ok:false,error:message};
- }finally{await db.prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND lock_token=?").bind(storeId,token).run();}
-}
-export async function synchronize(){
- const configured=await ensureEnvironmentConnections();
- if(!configured.length)throw new ApiError(400,"Configure uma loja no arquivo local de ambiente antes de sincronizar.");
- // Independent shops may fail without hiding the last successful snapshot.
- return Promise.all(configured.map(s=>syncStore(s.id)));
+ const [connections,rule]=await Promise.all([getConnections(),getRule()]);
+ const ids=connections.map(c=>c.id);
+ const records=ids.length?await database().prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot WHERE r.store_id IN ("+ids.map(()=>"?").join(",")+")").bind(...ids).all<{payload:string}>():{results:[]};
+ const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product)),ids);
+ return {demo:false,products,rule,connections};
 }

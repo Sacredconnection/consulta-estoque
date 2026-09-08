@@ -19,3 +19,5 @@
 
 @media(max-width:1250px){.connection-grid{grid-template-columns:1fr!important}}
 @media(max-width:767px){.store-overview{grid-template-columns:1fr!important}}
+
+.sync-progress{padding-top:20px;color:#496b80}.sync-progress>div:first-child{display:flex;align-items:center;gap:8px;font-size:14px;margin-bottom:12px}.sync-progress p{font-size:13px;margin:10px 0 3px}.sync-progress small{font-size:12px}.stock-pagination{padding:15px}.stock-pagination span{font-size:13px;padding:0 12px}

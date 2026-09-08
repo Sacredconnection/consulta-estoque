@@ -87,3 +87,40 @@ test("safe WooCommerce diagnostic preserves HTTP status and recognized cause wit
   const m=(e as Error).message;assert.match(m,/HTTP 401/);assert.match(m,/woocommerce_rest_authentication_error/);assert.match(m,/Consumer key é inválida/);return true;
  });
 });
+
+import {advanceCatalog,initialCursor} from "../lib/sync-cursor";
+test("incremental catalog persists page cursor and completes only after all product pages",async()=>{
+ let calls=0;let cursor=initialCursor();let all=0;
+ const request=(async(input:RequestInfo|URL)=>{
+  calls++;const page=Number(new URL(String(input)).searchParams.get("page"));
+  return Response.json(Array.from({length:page<3?100:51},(_,i)=>({id:(page-1)*100+i+1,type:"simple",manage_stock:true,stock_quantity:5})),{headers:{"X-WP-TotalPages":"3","X-WP-Total":"251"}});
+ }) as typeof fetch;
+ for(let page=1;page<=3;page++){const result=await advanceCatalog("maya",credentials,cursor,request);assert.equal(result.done,page===3);all+=result.records.length;cursor=JSON.parse(JSON.stringify(result.cursor));}
+ assert.equal(calls,3);assert.equal(all,251);assert.equal(cursor.productsDone,251);assert.equal(cursor.totalProducts,251);
+});
+test("variable products resume across short steps and only finish after every variation page",async()=>{
+ let concurrent=0,maximum=0;
+ const request=(async(input:RequestInfo|URL)=>{
+  const u=new URL(String(input));const parentMatch=u.pathname.match(/products\/(\d+)\/variations/);
+  if(!parentMatch)return Response.json(Array.from({length:8},(_,i)=>({id:i+1,type:"variable",name:"Product "+i,manage_stock:false})),{headers:{"X-WP-TotalPages":"1","X-WP-Total":"8"}});
+  concurrent++;maximum=Math.max(maximum,concurrent);await new Promise(r=>setTimeout(r,1));concurrent--;
+  const parent=Number(parentMatch[1]),page=Number(u.searchParams.get("page"));
+  const count=parent===1&&page===1?100:2;
+  return Response.json(Array.from({length:count},(_,i)=>({id:parent*1000+page*100+i,manage_stock:true,stock_quantity:4})),{headers:{"X-WP-TotalPages":parent===1?"2":"1"}});
+ }) as typeof fetch;
+ let cursor=initialCursor(),done=false,records=0,steps=0;
+ while(!done){const before=JSON.stringify(cursor);const result=await advanceCatalog("maya",credentials,cursor,request);assert.equal(JSON.stringify(cursor),before);cursor=JSON.parse(JSON.stringify(result.cursor));records+=result.records.length;done=result.done;steps++;assert.ok(steps<10);}
+ assert.ok(steps>1);assert.ok(maximum<=6);assert.equal(cursor.productsDone,8);assert.equal(records,116);
+});
+test("a failed step does not advance the saved cursor and can be retried",async()=>{
+ const cursor=initialCursor(),before=JSON.stringify(cursor);
+ await assert.rejects(()=>advanceCatalog("maya",credentials,cursor,(async()=>Response.json({code:"woocommerce_rest_authentication_error"},{status:401})) as typeof fetch),/HTTP 401/);
+ assert.equal(JSON.stringify(cursor),before);
+ const retry=await advanceCatalog("maya",credentials,cursor,(async()=>Response.json([{id:1,type:"simple"}])) as typeof fetch);
+ assert.equal(retry.done,true);assert.equal(retry.records.length,1);
+});
+test("incrementally collected duplicate SKUs stay isolated within their store",()=>{
+ const first=toRecord("maya",{id:1,sku:"DUP"},"now"),second=toRecord("maya",{id:2,sku:"DUP"},"now");
+ const other=toRecord("sacred",{id:3,sku:"DUP"},"now");
+ const merged=mergeCatalog([first,second,other]);assert.equal(merged.length,3);assert.ok(merged.every(p=>p.stocks.length===1));
+});

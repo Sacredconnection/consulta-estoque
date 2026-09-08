@@ -10,3 +10,10 @@ export const records=sqliteTable("records",{
  productId:integer("product_id").notNull(), payload:text("payload").notNull(),
 },t=>[primaryKey({columns:[t.snapshot,t.storeId,t.productId]}),index("idx_records_store_snapshot").on(t.storeId,t.snapshot)]);
 export const settings=sqliteTable("settings",{id:text("id").primaryKey(),payload:text("payload").notNull()});
+
+export const syncJobs=sqliteTable("sync_jobs",{
+ storeId:text("store_id").primaryKey(),runId:text("run_id").notNull(),
+ status:text("status").notNull(),cursor:text("cursor").notNull(),
+ startedAt:text("started_at").notNull(),updatedAt:text("updated_at").notNull(),
+ error:text("error"),
+});

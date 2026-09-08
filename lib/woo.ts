@@ -23,7 +23,7 @@ export async function wooPage(storeId:StoreId,credentials:Credentials,path:strin
  }
  let body:unknown;try{body=await response.json();}catch{throw new IntegrationError("A loja retornou um formato inválido. Verifique o acesso à API REST.");}
  if(!Array.isArray(body)||body.some(p=>!p||!Number.isSafeInteger(p.id)||p.id<=0))throw new IntegrationError("O catálogo retornado pela loja não é válido.");
- return {items:body as WooProduct[],pages:Number(response.headers.get("X-WP-TotalPages")||0)};
+ return {items:body as WooProduct[],pages:Number(response.headers.get("X-WP-TotalPages")||0),total:Number(response.headers.get("X-WP-Total")||0)};
 }
 export async function* wooPages(storeId:StoreId,credentials:Credentials,path:string,request:typeof fetch=fetch){
  for(let page=1;page<=100;page++){
@@ -64,6 +64,13 @@ export async function readCatalog(storeId:StoreId,credentials:Credentials,at:str
 }
 export function mergeCatalog(records:Product[]){
  const grouped=new Map<string,Product>();
- for(const r of records){const existing=grouped.get(r.key);if(existing)existing.stocks.push(...r.stocks);else grouped.set(r.key,{...r,stocks:[...r.stocks]});}
+ const counts=new Map<string,number>();
+ for(const r of records)for(const stock of r.stocks){const key=stock.storeId+":"+r.key;counts.set(key,(counts.get(key)??0)+1);}
+ for(const r of records)for(const stock of r.stocks){
+  const duplicate=(counts.get(stock.storeId+":"+r.key)??0)>1;
+  const key=duplicate?"duplicate:"+stock.storeId+":"+stock.id:r.key;
+  const item={...r,key,name:r.name+(duplicate?" · SKU duplicado":""),stocks:[stock]};
+  const existing=grouped.get(key);if(existing)existing.stocks.push(stock);else grouped.set(key,item);
+ }
  return [...grouped.values()].sort((a,b)=>a.name.localeCompare(b.name,"pt-BR"));
 }

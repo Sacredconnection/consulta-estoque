@@ -19,14 +19,14 @@ O site publicado não acessa o arquivo deste computador e continuará sem consul
 Node >=22.13.0 e npm.
 1. npm install
 2. Configure .env.local com as credenciais de leitura do WooCommerce.
-3. Aplique drizzle/0000_free_cerebro.sql ao D1 local com Wrangler, caso o banco ainda não exista.
+3. Aplique as migrações de drizzle/ ao D1 local com Wrangler, em ordem. A migração 0001 cria o progresso persistente da sincronização.
 4. npm run dev
 5. Abra /signin-with-chatgpt?return_to=/ na sessão local se necessário.
 
 O banco D1 guarda snapshots, status e regras, sem as chaves das lojas. A coluna legada credentials contém apenas o marcador environment nas conexões atuais.
 
 ## Uso
-- A primeira abertura sincroniza as conexões ainda não consultadas.
+- A primeira abertura inicia ou retoma conexões ainda não consultadas. O botão atualiza as lojas em etapas curtas, com progresso por loja, e retoma execuções interrompidas.
 - Consulta de estoque: busca por nome ou SKU e comparação entre lojas.
 - Agente: consultas guiadas de produto/SKU, estoque baixo e reposição.
 - Reposição: sugestões por nível mínimo e exportação CSV.
@@ -36,15 +36,17 @@ O banco D1 guarda snapshots, status e regras, sem as chaves das lojas. A coluna 
 
 ## Regras de estoque
 - API REST v3 por HTTPS, Basic Auth somente no servidor e origens fixas. Redirecionamentos não são seguidos.
-- Produtos e variações paginados; até 10.000 itens por endpoint e 15.000 registros por loja.
+- Produtos e variações paginados; até 10.000 itens por endpoint e 50.000 registros por loja. Cada etapa lê no máximo uma página de produtos e seis páginas de variações em paralelo.
 - Agrupamento por SKU idêntico, sensível a maiúsculas. Produtos sem SKU ou duplicados na mesma loja ficam isolados.
 - N/D indica quantidade não controlada; — indica produto não encontrado.
 - Estoque compartilhado de variações é contado apenas na linha do produto pai.
-- A publicação do snapshot ocorre somente após leitura e gravação completas. Falhas preservam o último estoque e ficam visíveis.
+- Cada etapa grava seus registros e o cursor na mesma transação D1. O snapshot só é publicado quando todas as etapas terminam. Falhas preservam o estoque anterior.
+- Execuções em andamento mostram progresso e ocultam o erro da tentativa anterior. Repetir o clique retoma a execução existente. Concorrência retorna estado ocupado, sem fabricar falha de credenciais.
+- A data de atualização é registrada no fim da execução. A tabela de consulta exibe 50 produtos por página.
 - Sugestão = max(0, alvo − max(0, estoque)), quando estoque <= mínimo. Não considera demanda, pedidos em trânsito ou fornecedores e não altera as lojas.
 
 ## Monitoramento
-Atualização automática com o painel aberto. Com ele fechado, não há agendador ativo.
+Atualização automática com o painel aberto. Ao fechar a página, o progresso já concluído permanece salvo; a próxima abertura retoma as etapas. Não há agendador externo ativo.
 scripts/sync-job.mjs e POST /api/jobs/sync preparam a integração com cron, mas dependem de autenticação de máquina e infraestrutura ainda não configuradas. Não há envio de e-mails ou mensagens externas.
 
 ## Validação em 08/09/2026
