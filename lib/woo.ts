@@ -7,8 +7,9 @@ export async function wooPage(storeId:StoreId,credentials:Credentials,path:strin
  const url=new URL("https://"+store.host+"/wp-json/wc/v3/"+path);
  for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);
  let response:Response;
- try{response=await request(url,{headers:{Authorization:"Basic "+btoa(credentials.key+":"+credentials.secret),Accept:"application/json"},redirect:"error",signal:AbortSignal.timeout(20000)});}
- catch{throw new IntegrationError("A loja não respondeu em até 20 segundos ou redirecionou a API. Verifique a disponibilidade e o endereço.");}
+ try{response=await request(url,{headers:{Authorization:"Basic "+btoa(credentials.key+":"+credentials.secret),Accept:"application/json"},redirect:"manual",signal:AbortSignal.timeout(20000)});}
+ catch{throw new IntegrationError("A loja não respondeu em até 20 segundos. Verifique a disponibilidade da API.");}
+ if(response.status>=300&&response.status<400)throw new IntegrationError("A API redirecionou a consulta. Verifique o endereço da loja; as credenciais não foram encaminhadas.");
  if(!response.ok)throw new IntegrationError(response.status===401||response.status===403?"A loja recusou as credenciais. Verifique a chave de leitura e as regras de acesso.":response.status===429?"A loja limitou as consultas. Aguarde e sincronize novamente.":"Falha na API WooCommerce (HTTP "+response.status+").");
  let body:unknown;try{body=await response.json();}catch{throw new IntegrationError("A loja retornou um formato inválido. Verifique o acesso à API REST.");}
  if(!Array.isArray(body)||body.some(p=>!p||!Number.isSafeInteger(p.id)||p.id<=0))throw new IntegrationError("O catálogo retornado pela loja não é válido.");

@@ -38,7 +38,7 @@ test("same SKU merges stores but missing SKU does not",()=>{
 const credentials={key:"ck_test",secret:"cs_test"};
 test("pagination reads beyond the first 100 products and requests fixed HTTPS origins",async()=>{
  let calls=0;
- const fake=async(input:RequestInfo|URL,init?:RequestInit)=>{const u=new URL(String(input));assert.equal(u.host,"backend-wholesale.sacred-snuff.com");assert.equal(init?.redirect,"error");calls++;return Response.json(Array.from({length:calls===1?100:1},(_,i)=>({id:(calls-1)*100+i+1})),{headers:{"X-WP-TotalPages":"2"}});};
+ const fake=async(input:RequestInfo|URL,init?:RequestInit)=>{const u=new URL(String(input));assert.equal(u.host,"backend-wholesale.sacred-snuff.com");assert.equal(init?.redirect,"manual");calls++;return Response.json(Array.from({length:calls===1?100:1},(_,i)=>({id:(calls-1)*100+i+1})),{headers:{"X-WP-TotalPages":"2"}});};
  const pages=[];for await(const p of wooPages("sacred",credentials,"products",fake as typeof fetch))pages.push(...p);
  assert.equal(pages.length,101);assert.equal(calls,2);
 });
@@ -52,4 +52,19 @@ test("authentication errors do not expose credentials or remote error payloads",
 });
 test("malformed catalog is rejected rather than treated as empty inventory",async()=>{
  await assert.rejects(()=>wooPage("maya",credentials,"products",{},(async()=>Response.json({products:[]})) as typeof fetch));
+});
+
+import { canonicalStoreEnvironment,environmentConnections } from "../lib/connections-env";
+test("legacy environment prefixes map by exact HTTPS hostname, including ampersand",()=>{
+ const vars=canonicalStoreEnvironment({"H&F_SITE_URL":"https://backend-wholesale.sacred-snuff.com","H&F_CONSUMER_KEY":"ck_test","H&F_CONSUMER_SECRET":"cs_test",BRINCR_SITE_URL:"https://backend-wholesale.mayaherbs.com",BRINCR_CONSUMER_KEY:"ck_maya",BRINCR_CONSUMER_SECRET:"cs_maya"});
+ assert.equal(vars.WOO_SACRED_KEY,"ck_test");assert.equal(vars.WOO_MAYA_KEY,"ck_maya");assert.ok(!vars.WOO_SC23_KEY);
+ assert.equal(environmentConnections(vars).length,2);
+});
+test("unknown hosts and incomplete pairs never become connections",()=>{
+ assert.deepEqual(canonicalStoreEnvironment({X_SITE_URL:"https://attacker.example",X_CONSUMER_KEY:"ck_test",X_CONSUMER_SECRET:"cs_test"}),{});
+ assert.deepEqual(environmentConnections({WOO_SACRED_KEY:"ck_test"}),[]);
+ assert.deepEqual(canonicalStoreEnvironment({X_SITE_URL:"http://backend-wholesale.sacred-snuff.com",X_CONSUMER_KEY:"ck_test",X_CONSUMER_SECRET:"cs_test"}),{});
+});
+test("redirects are rejected without forwarding authorization to another origin",async()=>{
+ let count=0;await assert.rejects(()=>wooPage("sacred",credentials,"products",{},(async(_url,options)=>{count++;assert.equal(options?.redirect,"manual");return new Response(null,{status:302,headers:{Location:"https://other.example"}});}) as typeof fetch),/redirecionou/);assert.equal(count,1);
 });

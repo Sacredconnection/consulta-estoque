@@ -2,6 +2,11 @@
 
 Sistema web privado para comparar estoques de Sacred Snuff, Maya Herbs e SC23 Trading.
 
+## Conexões do .env.local
+O servidor de desenvolvimento lê o arquivo ignorado .env.local. Prefixos legados como BRINCR e H&F são associados às lojas pelo hostname de *_SITE_URL; somente as três origens HTTPS aprovadas são aceitas.
+Na hospedagem, as mesmas chaves são configuradas como segredos WOO_SACRED_KEY / WOO_SACRED_SECRET, WOO_MAYA_KEY / WOO_MAYA_SECRET e WOO_SC23_KEY / WOO_SC23_SECRET. Nenhum segredo local é incluído no build.
+Conexões de ambiente têm prioridade sobre o cadastro manual e não podem ser alteradas pelo formulário. A primeira abertura inicia a sincronização de conexões ainda não sincronizadas. Falhas de autenticação ficam visíveis; nenhum dado é inventado.
+
 ## Uso
 1. Abra **Conexões** e cadastre, para cada loja, uma Consumer key e Consumer secret do WooCommerce com permissão de Leitura.
 2. Clique em **Sincronizar estoques**. O catálogo real substitui a demonstração assim que uma loja é conectada; lojas não conectadas continuam explicitamente indisponíveis.
@@ -47,7 +52,7 @@ Desenvolvimento local: aplicar a migração usando Wrangler D1 local. O Sites fo
 CREDENTIAL_KEY é uma string base64 de 32 bytes aleatórios. Guardar em .env local (ignorado) e em segredo da hospedagem; nunca no navegador nem no Git.
 
 ## Limites e verificações pendentes
-- As três lojas reais ainda dependem das chaves do proprietário. Não houve leitura autenticada nem teste de catálogo real.
+- Validação em 08/09/2026: Sacred Snuff aceitou a chave do .env.local; Maya Herbs retornou HTTP 401. SC23 não possui credenciais nesse arquivo.
 - Regras globais por loja/produto; previsão por velocidade de vendas, regras individuais, fornecedores e pedidos de compra não estão implementados.
 - Monitoramento no painel, sem cron remoto configurado.
 - A ferramenta WebMCP consultar_estoque é registrada se suportada pelo navegador. O ambiente de validação WebMCP não estava disponível; não foi verificada em um contexto WebMCP real.
