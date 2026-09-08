@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1788890279679,
+      "tag": "0000_free_cerebro",
+      "breakpoints": true
+    }
+  ]
+}
