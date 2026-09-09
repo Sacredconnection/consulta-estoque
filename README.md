@@ -42,6 +42,9 @@ O banco guarda snapshots, status e regras. A coluna legada credentials contém s
 
 ## Consultas e mensagens
 
+- A aba Pagnier exibe o relatório Nomus fornecido, com opção de abrir em outra janela. Ela não exige chaves WooCommerce nem banco. Seus saldos ainda não entram na consulta IA ou no catálogo consolidado.
+- O reconhecimento de `<PREFIXO>_SITE_URL` aceita o ponto final DNS após o domínio. As chamadas WooCommerce continuam usando os endereços fixos das lojas.
+
 - A única tela é o chat, com exemplos de perguntas, status das lojas e botão Atualizar estoques.
 - As respostas são mensagens formatadas com títulos por loja e produto, listas de variações, quantidade disponível e data da última sincronização.
 - Latas: apresentações de 5, 10, 20 ou 50 g.

@@ -65,6 +65,15 @@ test("unknown hosts and incomplete pairs never become connections",()=>{
  assert.deepEqual(environmentConnections({WOO_SACRED_KEY:"ck_test"}),[]);
  assert.deepEqual(canonicalStoreEnvironment({X_SITE_URL:"http://backend-wholesale.sacred-snuff.com",X_CONSUMER_KEY:"ck_test",X_CONSUMER_SECRET:"cs_test"}),{});
 });
+
+test("Sacred accepts a DNS trailing dot and falls back from blank canonical credentials",()=>{
+ const legacy={BRINCR_SITE_URL:"https://backend-wholesale.sacred-snuff.com.",BRINCR_CONSUMER_KEY:"ck_test",BRINCR_CONSUMER_SECRET:"cs_test"};
+ assert.deepEqual(environmentConnections({...legacy,WOO_SACRED_KEY:" ",WOO_SACRED_SECRET:" "}),[{id:"sacred",key:"ck_test",secret:"cs_test"}]);
+ assert.deepEqual(environmentConnections({...legacy,WOO_SACRED_KEY:"ck_canonical",WOO_SACRED_SECRET:"cs_canonical"}),[{id:"sacred",key:"ck_canonical",secret:"cs_canonical"}]);
+ for(const host of ["backend-wholesale.sacred-snuff.com.evil.example","backend-wholesale.sacred-snuff.com.."]){
+  assert.deepEqual(environmentConnections({...legacy,BRINCR_SITE_URL:"https://"+host}),[]);
+ }
+});
 test("redirects are rejected without forwarding authorization to another origin",async()=>{
  let count=0;await assert.rejects(()=>wooPage("sacred",credentials,"products",{},(async(_url,options)=>{count++;assert.equal(options?.redirect,"manual");return new Response(null,{status:302,headers:{Location:"https://other.example"}});}) as typeof fetch),/redirecionou/);assert.equal(count,1);
 });

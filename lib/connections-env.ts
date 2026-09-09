@@ -7,12 +7,13 @@ export function canonicalStoreEnvironment(values:EnvironmentValues):Record<strin
  const output:Record<string,string>={};
  for(const store of STORES){
   const name=runtimeNames[store.id];
-  if(values[name+"_KEY"]&&values[name+"_SECRET"]){
-   output[name+"_KEY"]=values[name+"_KEY"]!.trim();output[name+"_SECRET"]=values[name+"_SECRET"]!.trim();continue;
+  const canonicalKey=values[name+"_KEY"]?.trim(),canonicalSecret=values[name+"_SECRET"]?.trim();
+  if(canonicalKey&&canonicalSecret){
+   output[name+"_KEY"]=canonicalKey;output[name+"_SECRET"]=canonicalSecret;continue;
   }
   for(const variable of Object.keys(values).filter(k=>k.endsWith("_SITE_URL"))){
    let url:URL;try{url=new URL(values[variable]!);}catch{continue;}
-   if(url.protocol!=="https:"||url.hostname!==store.host||url.username||url.password||url.port)continue;
+   if(url.protocol!=="https:"||url.hostname.replace(/\.$/,"")!==store.host||url.username||url.password||url.port)continue;
    const prefix=variable.slice(0,-"_SITE_URL".length);
    const key=values[prefix+"_CONSUMER_KEY"]?.trim(),secret=values[prefix+"_CONSUMER_SECRET"]?.trim();
    if(key&&secret){output[name+"_KEY"]=key;output[name+"_SECRET"]=secret;break;}
