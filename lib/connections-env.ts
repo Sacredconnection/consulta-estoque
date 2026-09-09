@@ -26,3 +26,16 @@ export function environmentConnections(values:EnvironmentValues):EnvironmentConn
  const canonical=canonicalStoreEnvironment(values);
  return STORES.flatMap(store=>{if(store.id==="pagnier")return [];const name=runtimeNames[store.id],key=canonical[name+"_KEY"],secret=canonical[name+"_SECRET"];return key&&secret?[{id:store.id,key,secret}]:[];});
 }
+
+export type ConnectionSetupIssue={id:WooStoreId;message:string};
+export function connectionSetupIssues(values:EnvironmentValues):ConnectionSetupIssue[]{
+ const configured=environmentConnections(values);
+ return STORES.flatMap(store=>{
+  if(store.id==='pagnier'||configured.some(c=>c.id===store.id))return [];
+  const prefix=runtimeNames[store.id];
+  // Sacred and Maya are expected sources. Show optional SC23 only if started.
+  if(store.id==='sc23'&&!values[prefix+'_KEY']&&!values[prefix+'_SECRET'])return [];
+  const missing=['_KEY','_SECRET'].filter(suffix=>!values[prefix+suffix]?.trim()).map(suffix=>prefix+suffix);
+  return [{id:store.id,message:'O deploy atual não recebeu valor preenchido em '+missing.join(' e ')+'. Preencha essas variáveis em Production e publique novamente. Se usa um prefixo como BRINCR, confira também a URL HTTPS e o par CONSUMER_KEY/CONSUMER_SECRET desse prefixo.'}];
+ });
+}

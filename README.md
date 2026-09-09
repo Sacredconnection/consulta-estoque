@@ -24,6 +24,8 @@ Prefixos locais aceitos:
 - BRINCR_SITE_URL, BRINCR_CONSUMER_KEY, BRINCR_CONSUMER_SECRET
 - H&F_SITE_URL, H&F_CONSUMER_KEY, H&F_CONSUMER_SECRET
 
+Na Vercel, nomes com `&` não são permitidos. Copie o valor de `H&F_CONSUMER_KEY` para `WOO_SACRED_KEY` e o de `H&F_CONSUMER_SECRET` para `WOO_SACRED_SECRET`. A URL Sacred já está definida no código. Após salvar em Production, faça um novo deploy. O diagnóstico na tela indica variáveis canônicas ausentes sem retornar seus valores.
+
 A associação usa o hostname HTTPS exato de Sacred Snuff, Maya Herbs ou SC23 Trading. Os nomes canônicos de .env.example também são aceitos. Lojas sem um par completo de credenciais ficam ocultas, inclusive nos resultados. Após editar .env.local, reinicie o servidor local.
 
 O site publicado usa as variáveis da Vercel; não acessa o arquivo deste computador.

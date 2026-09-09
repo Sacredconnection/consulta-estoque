@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, Check, CircleHelp, Loader
 import { Button } from "@/components/ui/button";
 import { StockTable } from "@/components/stock-table";
 import { buildStockRows } from "@/lib/stock-table";
+import type { ConnectionSetupIssue } from "@/lib/connections-env";
 import { Progress } from "@/components/ui/progress";
 import { STORES, DEFAULT_RULE, type Product, type Rule, type StoreId } from "@/lib/inventory";
 
@@ -27,6 +28,7 @@ const normalized=(value:string)=>value.normalize("NFD").replace(/[\u0300-\u036f]
 const CATALOG_PAGE_SIZE=100;
 export default function Home(){
  const [rule,setRule]=useState<Rule>(DEFAULT_RULE),[connections,setConnections]=useState<Connection[]>([]);
+ const [connectionSetup,setConnectionSetup]=useState<ConnectionSetupIssue[]>([]);
  const [busy,setBusy]=useState(false),[notice,setNotice]=useState(""),[ready,setReady]=useState(false);
  const [message,setMessage]=useState(""),[messages,setMessages]=useState<Message[]>([]),[chatBusy,setChatBusy]=useState(false);
  const [activeView,setActiveView]=useState<"assistant"|"catalog">("assistant"),[catalogProducts,setCatalogProducts]=useState<Product[]>([]);
@@ -34,7 +36,7 @@ export default function Home(){
  const syncRunning=useRef(false),syncAbort=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null);
  async function load(){
   try{const r=await fetch("/api/inventory",{cache:"no-store"});if(!r.ok){const failure=await r.json().catch(()=>null) as {error?:unknown}|null;throw Error(typeof failure?.error==="string"?failure.error:r.status===401?"Entre novamente com seu usuário e senha para carregar as lojas.":"Não foi possível carregar as lojas. Tente atualizar novamente.");}
-   const d=await r.json() as {connections:Connection[];rule:Rule;products:Product[]};setConnections(d.connections);setRule(d.rule);setCatalogProducts(d.products);
+   const d=await r.json() as {connections:Connection[];rule:Rule;products:Product[];connectionSetup?:ConnectionSetupIssue[]};setConnections(d.connections);setRule(d.rule);setCatalogProducts(d.products);setConnectionSetup(d.connectionSetup??[]);
    setNotice(d.connections.length?"":"Nenhuma loja foi reconhecida nas variáveis do servidor. Confira os pares WOO_SACRED_KEY/SECRET, WOO_MAYA_KEY/SECRET e WOO_SC23_KEY/SECRET no ambiente Production da Vercel e faça um novo deploy.");
   }catch(e){setNotice((e as Error).message);}finally{setReady(true);}
  }
@@ -111,6 +113,7 @@ export default function Home(){
    </section>
    {connections.some(c=>c.sync?.status==="running")&&<section className="sync-progress" aria-label="Progresso da atualização">{connections.filter(c=>c.sync?.status==="running").map(c=><div key={c.id}><span>{STORES.find(s=>s.id===c.id)!.name}<small>{c.sync!.productsDone} / {c.sync!.totalProducts||"…"} produtos</small></span><Progress aria-label={"Atualização de "+STORES.find(s=>s.id===c.id)!.name} value={c.sync!.totalProducts?Math.round(c.sync!.productsDone/c.sync!.totalProducts*100):0}/></div>)}</section>}
    {notice&&<div className="notice" role="status"><CircleHelp size={17}/><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Fechar aviso"><X size={17}/></button></div>}
+   {connectionSetup.map(issue=><div className="notice" role="status" key={issue.id}><CircleHelp size={17}/><span><strong>{STORES.find(s=>s.id===issue.id)!.name} · configuração incompleta:</strong> {issue.message}</span></div>)}
    {connections.filter(c=>c.error).map(c=><p className="connection-error" key={c.id} role="alert"><strong>{STORES.find(s=>s.id===c.id)!.name}:</strong> {c.error}</p>)}
    <nav className="view-tabs" role="tablist" aria-label="Visualização do estoque">
     <button id="assistant-tab" role="tab" aria-selected={activeView==="assistant"} aria-controls="assistant-panel" onClick={()=>setActiveView("assistant")}><Network size={16}/>Consulta IA</button>

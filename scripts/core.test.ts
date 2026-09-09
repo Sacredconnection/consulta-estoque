@@ -54,7 +54,7 @@ test("malformed catalog is rejected rather than treated as empty inventory",asyn
  await assert.rejects(()=>wooPage("maya",credentials,"products",{},(async()=>Response.json({products:[]})) as typeof fetch));
 });
 
-import { canonicalStoreEnvironment,environmentConnections } from "../lib/connections-env";
+import { canonicalStoreEnvironment,environmentConnections,connectionSetupIssues } from "../lib/connections-env";
 test("legacy environment prefixes map by exact HTTPS hostname, including ampersand",()=>{
  const vars=canonicalStoreEnvironment({"H&F_SITE_URL":"https://backend-wholesale.sacred-snuff.com","H&F_CONSUMER_KEY":"ck_test","H&F_CONSUMER_SECRET":"cs_test",BRINCR_SITE_URL:"https://backend-wholesale.mayaherbs.com",BRINCR_CONSUMER_KEY:"ck_maya",BRINCR_CONSUMER_SECRET:"cs_maya"});
  assert.equal(vars.WOO_SACRED_KEY,"ck_test");assert.equal(vars.WOO_MAYA_KEY,"ck_maya");assert.ok(!vars.WOO_SC23_KEY);
@@ -73,6 +73,15 @@ test("Sacred accepts a DNS trailing dot and falls back from blank canonical cred
  for(const host of ["backend-wholesale.sacred-snuff.com.evil.example","backend-wholesale.sacred-snuff.com.."]){
   assert.deepEqual(environmentConnections({...legacy,BRINCR_SITE_URL:"https://"+host}),[]);
  }
+});
+
+test("missing Sacred credentials are diagnosed without exposing secrets or hiding behind Maya",()=>{
+ const values={WOO_MAYA_KEY:'private-maya-key',WOO_MAYA_SECRET:'private-maya-secret',WOO_SACRED_KEY:'private-sacred-key',WOO_SACRED_SECRET:'  '};
+ const issues=connectionSetupIssues(values);
+ assert.equal(issues.length,1);assert.equal(issues[0].id,'sacred');assert.match(issues[0].message,/WOO_SACRED_SECRET/);assert.doesNotMatch(issues[0].message,/WOO_SACRED_KEY/);
+ assert.doesNotMatch(JSON.stringify(issues),/private-/);
+ assert.equal(connectionSetupIssues({...values,WOO_SACRED_SECRET:'private-sacred-secret'}).length,0);
+ assert.equal(connectionSetupIssues({...values,BRINCR_SITE_URL:'https://backend-wholesale.sacred-snuff.com.',BRINCR_CONSUMER_KEY:'private-key',BRINCR_CONSUMER_SECRET:'private-secret'}).length,0);
 });
 test("redirects are rejected without forwarding authorization to another origin",async()=>{
  let count=0;await assert.rejects(()=>wooPage("sacred",credentials,"products",{},(async(_url,options)=>{count++;assert.equal(options?.redirect,"manual");return new Response(null,{status:302,headers:{Location:"https://other.example"}});}) as typeof fetch),/redirecionou/);assert.equal(count,1);

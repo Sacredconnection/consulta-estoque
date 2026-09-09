@@ -1,7 +1,7 @@
 import { getDatabase } from "./database";
 import { databaseErrorMessage } from "./database-errors";
 import { validAccess } from "./auth";
-import { environmentConnections, type EnvironmentValues } from "./connections-env";
+import { environmentConnections, connectionSetupIssues, type EnvironmentValues } from "./connections-env";
 import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
 import { IntegrationError, mergeCatalog } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
@@ -64,5 +64,5 @@ export async function state(){
  const ids=connections.map(c=>c.id);
  const records=ids.length?await database().prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot WHERE r.store_id IN ("+ids.map(()=>"?").join(",")+")").bind(...ids).all<{payload:string}>():{results:[]};
  const products=scopeProductsToStores(mergeCatalog(records.results.map(r=>JSON.parse(r.payload) as Product).filter(p=>p.catalogVersion===CATALOG_VERSION)),ids);
- return {demo:false,products,rule,connections};
+ return {demo:false,products,rule,connections,connectionSetup:connectionSetupIssues(process.env)};
 }
