@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parsePagnierRows, advancePagnier } from '../lib/pagnier';
 import { buildStockRows, totalMass } from '../lib/stock-table';
-import { agentAnswer, DEFAULT_RULE } from '../lib/inventory';
+import { agentAnswer, DEFAULT_RULE, searchProducts } from '../lib/inventory';
 import { initialCursor } from '../lib/sync-cursor';
 import type { Product } from '../lib/inventory';
 
@@ -14,18 +14,47 @@ test('equivalent Maya and Sacred SKUs share one presentation and remain searchab
  assert.equal(ten.stores.maya?.quantity,109);assert.equal(ten.stores.sacred?.quantity,-42);assert.equal(ten.stores.pagnier?.quantity,5);
  assert.deepEqual(ten.stores.sacred?.skus,['RAYA0204']);
  assert.equal(totalMass(Object.values(ten.stores)).kg,1.1400000000000001);
- for(const code of ['RAYA02-10','RAYA0204','ARAYA0204']){
+ for(const code of ['RAYA02-10','RAYA0204']){
   const result=agentAnswer(products,DEFAULT_RULE,'estoque de '+code,['maya','sacred','pagnier']);
   assert.equal(result.products.length,3);assert.equal(buildStockRows(result.products).length,1);
  }
  assert.ok(ten.search.includes('raya0204'));
 });
 
-test('equivalence rejects conflicting weights, shared pools and unapproved families',()=>{
+test('equivalence keeps different weights, shared pools and unrelated SKU patterns separate',()=>{
  const make=(sku:string,grams:number,shared=false):Product=>({key:sku,sku,name:'Same name',category:'Rapé',stocks:[{storeId:'sacred',id:grams,quantity:1,grams,shared,packaging:'can',status:'instock',updatedAt:'now'}]});
- const rows=buildStockRows([make('RAYA0204',50),make('RAYA0206',50),make('RAYA02',50,true),make('OTHER0206',50)]);
+ const rows=buildStockRows([make('RAYA0204',10),make('RAYA0206',50),make('RAYA02',50,true),make('OTHER0206',50)]);
  assert.equal(rows.length,4);
- assert.equal(rows.filter(r=>r.key.startsWith('equivalent:')).length,1);
+ assert.equal(rows.filter(r=>r.key.startsWith('equivalent:')).length,2);
+});
+
+test('all rapé families and presentations use actual weight, including different suffix conventions',()=>{
+ const make=(storeId:'maya'|'sacred'|'pagnier',sku:string,grams:number|null,id:number):Product=>({key:storeId+sku,sku,name:storeId==='maya'?'Nome em português':'English name',category:'Rapé',stocks:[{storeId,id,quantity:2,grams,packaging:'can',status:'instock',updatedAt:'now'}]});
+ for(const family of ['RACO06','RAHK02','RANU10','RAKU21','RAYA02','RAZZ99']){
+  for(const [grams,suffix] of [[5,'09'],[10,'04'],[20,'05'],[50,'06'],[100,'03'],[250,'02'],[500,'01']] as const){
+   const products=[make('maya',family+'-'+grams,grams,1),make('sacred',family+suffix,grams,2),make('pagnier',family+suffix,grams,3)];
+   const rows=buildStockRows(products);assert.equal(rows.length,1);assert.equal(Object.keys(rows[0].stores).length,3);
+   assert.ok(Math.abs(totalMass(Object.values(rows[0].stores)).kg!-6*grams/1000)<1e-9);
+   for(const query of [family+'-'+grams,family+suffix,'Nome em português','English name'])assert.equal(searchProducts(products,query).length,3);
+  }
+ }
+ const differentSuffixes=[make('maya','RASC01-10',10,1),make('sacred','RASC0103',10,2),make('maya','RASC01-50',50,3),make('sacred','RASC0105',50,4)];
+ assert.equal(buildStockRows(differentSuffixes).length,2);
+ assert.equal(searchProducts(differentSuffixes,'RASC0103').length,2);
+ assert.equal(buildStockRows(searchProducts(differentSuffixes,'RASC01-50'))[0].stores.sacred?.quantity,2);
+ const hundred=make('pagnier','RASC0111',100,5);
+ assert.equal(searchProducts([...differentSuffixes,hundred],'RASC01-10').length,2);
+ // A source can assign the same variant ID to a different presentation.
+ const pagnierHundred=make('pagnier','RASC0103',100,6);
+ const mixed=[...differentSuffixes,pagnierHundred];
+ assert.equal(buildStockRows(searchProducts(mixed,'RASC0103')).length,2);
+ assert.equal(buildStockRows(searchProducts(mixed,'RASC01-10')).length,1);
+ const invalid=[make('maya','RAYA14-500',10,1),make('sacred','RAYA1404',10,2),make('maya','RAYA14-10',null,3),make('sacred','RAYA1504',10,4)];
+ assert.equal(buildStockRows(invalid).length,4);
+ assert.equal(searchProducts(invalid,'RAYA14-500').length,1);
+ const bulk=make('pagnier','RACO0600',1000,5);bulk.stocks[0].quantityUnit='kg';
+ const units=make('maya','RACO06-1000',1000,6);
+ assert.equal(buildStockRows([bulk,units]).length,2);
 });
 
 const names=['Código do produto','Revisão do produto','Descrição do produto','Unidade de medida abreviatura','Código da empresa','Nome da empresa','Código do setor de estoque','Nome do setor de estoque','Setor de estoque ativo?','Setor de estoque considera saldo disponível?','Saldo em estoque do produto no setor','Tipo de produto','Grupo de produto','Família de produto','Produto ativo?','Peso líquido unitário (kg)'];

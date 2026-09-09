@@ -1,22 +1,34 @@
-import type { Product, Stock, StoreId } from './inventory';
+import type { Product, Stock } from './inventory';
 
-type Equivalence={id:string;name:string;grams:number;unit:string;aliases:Partial<Record<StoreId,string[]>>};
-// Confirmed RAYA02 family. Add further families explicitly; never infer identity
-// from similar names or from a package weight alone.
-export const PRODUCT_EQUIVALENCES:Equivalence[]=[
- ...([{grams:5,suffix:'09'},{grams:10,suffix:'04'},{grams:20,suffix:'05'},{grams:50,suffix:'06'},{grams:100,suffix:'03'},{grams:250,suffix:'02'},{grams:500,suffix:'01'}]).map(({grams,suffix})=>({
-  id:'RAYA02-'+grams,name:'Yawanawa Força Feminina',grams,unit:'un.',
-  aliases:{maya:['RAYA02-'+grams],sacred:['RAYA02'+suffix,...(grams===10?['ARAYA0204']:[])],pagnier:['RAYA02'+suffix]},
- })),
- {id:'RAYA02-KG',name:'Yawanawa Força Feminina',grams:1000,unit:'kg',aliases:{pagnier:['RAYA0200']}},
-];
+type Equivalence={id:string;grams:number;unit:string};
+
+// Rapé families use RA + two letters + two digits. Maya appends grams;
+// Sacred/Pagnier append a variant ID whose meaning varies between families.
+// Use the actual presentation weight, never a universal numeric suffix map.
 
 export function productEquivalence(product:Pick<Product,'sku'>,stock:Stock):Equivalence|undefined{
- if(stock.shared||stock.packaging==='shared'||stock.grams==null)return;
- const sku=product.sku.trim().toUpperCase();
- return PRODUCT_EQUIVALENCES.find(rule=>rule.unit===(stock.quantityUnit??'un.')&&Math.abs(rule.grams-stock.grams!)<0.000001&&rule.aliases[stock.storeId]?.includes(sku));
+ if(stock.shared||stock.packaging==='shared'||stock.grams==null||!Number.isFinite(stock.grams)||stock.grams<=0)return;
+ const sku=product.sku.trim().toUpperCase(),unit=stock.quantityUnit??'un.';
+ const maya=/^(RA[A-Z]{2}\d{2})-(\d+(?:\.\d+)?)$/.exec(sku);
+ if(stock.storeId==='maya'&&maya&&unit==='un.'&&Math.abs(Number(maya[2])-stock.grams)<0.000001){
+  return {id:maya[1]+'-'+Number(maya[2]),grams:stock.grams,unit};
+ }
+ if(stock.storeId!=='sacred'&&stock.storeId!=='pagnier')return;
+ const coded=/^(RA[A-Z]{2}\d{2})(\d{2})$/.exec(sku);
+ if(!coded)return;
+ if(unit==='kg'&&coded[2]==='00'&&stock.grams===1000)return {id:coded[1]+'-KG',grams:1000,unit};
+ if(unit!=='un.'||coded[2]==='00')return;
+ return {id:coded[1]+'-'+stock.grams,grams:stock.grams,unit};
 }
 
 export function equivalenceSearchText(product:Product):string{
- return product.stocks.map(stock=>{const rule=productEquivalence(product,stock);return rule?[rule.name,rule.id,...Object.values(rule.aliases).flat()].join(' '):'';}).join(' ');
+ return product.stocks.map(stock=>productEquivalence(product,stock)?.id??'').join(' ');
+}
+
+// Expand actual catalog matches so translated names and either SKU find every
+// equivalent presentation, without inventing variant IDs for other sources.
+export function includeEquivalentProducts(products:Product[],matches:Product[]):Product[]{
+ const ids=new Set(matches.flatMap(p=>p.stocks.map(s=>productEquivalence(p,s)?.id).filter(Boolean)));
+ const selected=new Set(matches);
+ return products.filter(p=>selected.has(p)||p.stocks.some(s=>{const id=productEquivalence(p,s)?.id;return id!==undefined&&ids.has(id);}));
 }

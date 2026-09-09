@@ -23,7 +23,7 @@ export function buildStockRows(products:Product[]):StockRow[]{
    let group=groups.get(key);if(!group){group={sku:sku||'Sem SKU',names:new Set(),presentations:new Set(),categories:new Set(),stores:new Map(),skus:new Map()};groups.set(key,group);}
    if(product.category)group.categories.add(product.category);
    const skus=group.skus.get(stock.storeId)??new Set();if(originalSku)skus.add(originalSku);group.skus.set(stock.storeId,skus);
-   group.names.add(equivalent?.name??stock.productName??product.name);group.presentations.add(equivalent?(equivalent.unit==='kg'?'Granel (kg)':equivalent.grams+' g'):stock.variationName||(stock.grams!=null?stock.grams+' g':'Unidade'));
+   group.names.add(stock.productName??product.name);group.presentations.add(equivalent?(equivalent.unit==='kg'?'Granel (kg)':equivalent.grams+' g'):stock.variationName||(stock.grams!=null?stock.grams+' g':'Unidade'));
    const stocks=group.stores.get(stock.storeId)??[];stocks.push(stock);group.stores.set(stock.storeId,stocks);
   }
  }
