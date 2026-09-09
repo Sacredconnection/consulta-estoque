@@ -3,10 +3,10 @@ import { useEffect, useState, useRef } from "react";
 import { ArrowUp, ArrowUpRight, Check, CircleHelp, LoaderCircle, Network, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { STORES, DEFAULT_RULE, type Rule, type StoreId } from "@/lib/inventory";
+import { STORES, DEFAULT_RULE, type Product, type Rule, type StoreId } from "@/lib/inventory";
 
 type Connection={id:StoreId;connected:boolean;needsSync?:boolean;catalogReady?:boolean;lastSync?:string;error?:string;sync?:{runId:string;status:string;productsDone:number;totalProducts:number;records:number;updatedAt:string;locked:boolean}|null};
-type Message={role:"user"|"assistant";text:string};
+type Message={role:"user"|"assistant";text:string;products?:Product[]};
 function emphasis(text:string){return text.split(/(\*\*[^*]+\*\*)/g).map((part,i)=>part.startsWith("**")?<strong key={i}>{part.slice(2,-2)}</strong>:part);}
 function Answer({text}:{text:string}){
  const nodes:React.ReactNode[]=[];const lines=text.split("\n");
@@ -20,6 +20,26 @@ function Answer({text}:{text:string}){
   }else nodes.push(<p key={i}>{emphasis(line)}</p>);
  }
  return <div className="answer">{nodes}</div>;
+}
+const number=(value:number)=>value.toLocaleString("pt-BR",{maximumFractionDigits:6});
+function StockTable({products}:{products:Product[]}){
+ const rows=products.flatMap(product=>product.stocks.map(stock=>{
+  const store=STORES.find(item=>item.id===stock.storeId);
+  const presentation=stock.variationName||(stock.grams!=null?number(stock.grams)+" g":"Unidade");
+  const totalKg=!stock.shared&&stock.packaging==="bulk"&&stock.quantity!==null&&stock.grams!=null?Math.max(0,stock.quantity)*stock.grams/1000:null;
+  return {key:product.key+":"+stock.storeId+":"+stock.id,store:store?.name??stock.storeId,product:stock.productName??product.name,presentation,sku:product.sku||"—",quantity:stock.quantity,grams:stock.grams,totalKg};
+ }));
+ if(!rows.length)return null;
+ return <section className="stock-table-section" aria-labelledby="stock-table-title">
+  <h2 id="stock-table-title">Visão em tabela</h2>
+  <div className="stock-table-scroll">
+   <table className="stock-table">
+    <caption className="sr-only">Estoque encontrado por loja, produto e apresentação</caption>
+    <thead><tr><th>Loja</th><th>Produto</th><th>Apresentação</th><th>SKU</th><th className="numeric">Quantidade</th><th className="numeric">Peso unitário</th><th className="numeric">Total em kg</th></tr></thead>
+    <tbody>{rows.map(row=><tr key={row.key}><td>{row.store}</td><td>{row.product}</td><td>{row.presentation}</td><td className="sku-cell">{row.sku}</td><td className="numeric">{row.quantity===null?"N/D":number(row.quantity)+" un."}</td><td className="numeric">{row.grams==null?"—":number(row.grams)+" g"}</td><td className="numeric">{row.totalKg===null?"—":number(row.totalKg)+" kg"}</td></tr>)}</tbody>
+   </table>
+  </div>
+ </section>;
 }
 export default function Home(){
  const [rule,setRule]=useState<Rule>(DEFAULT_RULE),[connections,setConnections]=useState<Connection[]>([]);
@@ -78,8 +98,8 @@ export default function Home(){
  async function ask(text=message){
   if(!text.trim()||chatBusy)return;setMessage("");setMessages(m=>[...m,{role:"user",text}]);setChatBusy(true);
   try{const r=await fetch("/api/agent",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:text})});
-   const d=await r.json() as {error?:string;text:string};if(!r.ok)throw Error(d.error||"Consulta indisponível");
-   setMessages(m=>[...m,{role:"assistant",text:d.text}]);
+   const d=await r.json() as {error?:string;text:string;products?:Product[]};if(!r.ok)throw Error(d.error||"Consulta indisponível");
+   setMessages(m=>[...m,{role:"assistant",text:d.text,products:d.products}]);
   }catch(e){setMessages(m=>[...m,{role:"assistant",text:"Não foi possível consultar: "+(e as Error).message}]);}
   finally{setChatBusy(false);input.current?.focus();}
  }
@@ -94,7 +114,7 @@ export default function Home(){
    {connections.some(c=>c.sync?.status==="running")&&<section className="sync-progress" aria-label="Progresso da atualização">{connections.filter(c=>c.sync?.status==="running").map(c=><div key={c.id}><span>{STORES.find(s=>s.id===c.id)!.name}<small>{c.sync!.productsDone} / {c.sync!.totalProducts||"…"} produtos</small></span><Progress aria-label={"Atualização de "+STORES.find(s=>s.id===c.id)!.name} value={c.sync!.totalProducts?Math.round(c.sync!.productsDone/c.sync!.totalProducts*100):0}/></div>)}</section>}
    {notice&&<div className="notice" role="status"><CircleHelp size={17}/><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Fechar aviso"><X size={17}/></button></div>}
    {connections.filter(c=>c.error).map(c=><p className="connection-error" key={c.id} role="alert"><strong>{STORES.find(s=>s.id===c.id)!.name}:</strong> {c.error}</p>)}
-   {!messages.length?<section className="welcome"><div className="eyebrow">SEU ESTOQUE, EM UMA CONVERSA</div><h1>Qual produto<br/>vamos consultar?</h1><p>Confira a disponibilidade em cada loja.<br/>Latas separadas do granel, com os totais em kg.</p><div className="suggestions">{["Veja o estoque de Tsunu","Quanto tem de Blue Lotus na Maya?","Quais produtos estão com estoque baixo?"].map((text,i)=><button key={text} disabled={chatBusy||!connections.length} onClick={()=>void ask(text)}><span className="example-number">0{i+1}</span><span>{text}</span><ArrowUpRight size={18}/></button>)}</div></section>:<section className="conversation" aria-label="Conversa com o agente" aria-live="polite" aria-relevant="additions">{messages.map((m,i)=><article key={i} className={"message "+m.role}><div className="speaker">{m.role==="user"?"Você":<><Network size={17}/>Elo · Agente de estoque</>}</div>{m.role==="user"?<p>{m.text}</p>:<Answer text={m.text}/>}</article>)}{chatBusy&&<div className="thinking" role="status"><LoaderCircle size={17} className="spin"/>Consultando o último estoque sincronizado…</div>}</section>}
+   {!messages.length?<section className="welcome"><div className="eyebrow">SEU ESTOQUE, EM UMA CONVERSA</div><h1>Qual produto<br/>vamos consultar?</h1><p>Confira a disponibilidade em cada loja.<br/>Latas separadas do granel, com os totais em kg.</p><div className="suggestions">{["Veja o estoque de Tsunu","Quanto tem de Blue Lotus na Maya?","Quais produtos estão com estoque baixo?"].map((text,i)=><button key={text} disabled={chatBusy||!connections.length} onClick={()=>void ask(text)}><span className="example-number">0{i+1}</span><span>{text}</span><ArrowUpRight size={18}/></button>)}</div></section>:<section className="conversation" aria-label="Conversa com o agente" aria-live="polite" aria-relevant="additions">{messages.map((m,i)=><article key={i} className={"message "+m.role}><div className="speaker">{m.role==="user"?"Você":<><Network size={17}/>Elo · Agente de estoque</>}</div>{m.role==="user"?<p>{m.text}</p>:<><Answer text={m.text}/>{m.products?.length?<StockTable products={m.products}/>:null}</>}</article>)}{chatBusy&&<div className="thinking" role="status"><LoaderCircle size={17} className="spin"/>Consultando o último estoque sincronizado…</div>}</section>}
    <div ref={bottom}/>
   </main>
   <div className="composer-dock"><form className="composer" onSubmit={e=>{e.preventDefault();void ask();}}><label htmlFor="question" className="sr-only">Pergunte pelo nome do produto ou SKU</label><textarea ref={input} id="question" maxLength={500} rows={2} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Pergunte pelo nome do produto ou SKU…" onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void ask();}}}/><Button type="submit" aria-label="Enviar pergunta" disabled={chatBusy||!message.trim()||!ready||!connections.length}><ArrowUp size={21}/></Button></form><p>Consulta somente leitura · Os resultados usam a última sincronização das lojas.</p></div>
