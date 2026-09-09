@@ -1,7 +1,8 @@
 import { wooPage, toRecord, IntegrationError, type Credentials, type WooProduct } from "./woo";
 import type { Product, StoreId } from "./inventory";
 import { CATALOG_VERSION } from "./catalog-policy";
-export type CatalogCursor={catalogVersion:number;page:number;catalogDone:boolean;pending:{parent:WooProduct;page:number}[];productsSeen:number;productsDone:number;totalProducts:number;records:number};
+import type { PagnierCursor } from "./pagnier";
+export type CatalogCursor={catalogVersion:number;page:number;catalogDone:boolean;pending:{parent:WooProduct;page:number}[];productsSeen:number;productsDone:number;totalProducts:number;records:number;pagnier?:PagnierCursor};
 export function initialCursor():CatalogCursor{return{catalogVersion:CATALOG_VERSION,page:1,catalogDone:false,pending:[],productsSeen:0,productsDone:0,totalProducts:0,records:0};}
 const fields="id,name,sku,type,manage_stock,stock_quantity,stock_status,categories,attributes,variations,lang,translations";
 export async function advanceCatalog(storeId:StoreId,credentials:Credentials,previous:CatalogCursor,request:typeof fetch=fetch){

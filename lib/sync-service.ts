@@ -3,6 +3,7 @@ import { initialCursor,advanceCatalog,type CatalogCursor } from "./sync-cursor";
 import { IntegrationError } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
 import type { StoreId } from "./inventory";
+import { advancePagnier } from "./pagnier";
 type Job={store_id:StoreId;run_id:string;status:string;cursor:string;started_at:string;updated_at:string;error:string|null};
 const owned="EXISTS (SELECT 1 FROM connections WHERE id=? AND lock_token=?)";
 export async function startSynchronization(){
@@ -30,7 +31,7 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
   if(!job||job.run_id!==runId||JSON.parse(job.cursor).catalogVersion!==CATALOG_VERSION)throw new ApiError(409,"A execução foi substituída. Consulte o progresso atual.");
   if(job.status!=="running")return {busy:false,connections:await getConnections()};
   const previous=JSON.parse(job.cursor) as CatalogCursor;
-  const result=await advanceCatalog(storeId,credentials,previous);
+  const result=credentials.id==="pagnier"?await advancePagnier(previous):await advanceCatalog(storeId,credentials,previous);
   const at=new Date().toISOString();
   // Records, checkpoint and final publication commit in one database transaction.
   // json_each keeps the batch bounded to a few SQL statements even for hundreds of variants.

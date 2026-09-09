@@ -35,7 +35,7 @@ export async function getRule():Promise<Rule>{
  return row?JSON.parse(row.payload):DEFAULT_RULE;
 }
 export function configuredEnvironmentConnections(){
- return environmentConnections(process.env as EnvironmentValues);
+ return [...environmentConnections(process.env as EnvironmentValues),{id:"pagnier" as const}];
 }
 export async function ensureEnvironmentConnections(){
  const configured=configuredEnvironmentConnections();
@@ -55,7 +55,7 @@ export async function getConnections(){
   const cursor=job?JSON.parse(job.cursor) as {catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
   const needsSync=cursor?.catalogVersion!==CATALOG_VERSION;
   const running=!needsSync&&job?.status==="running";
-  return {id:s.id,catalogReady:c?.catalog_version===CATALOG_VERSION||(!needsSync&&job?.status==="succeeded"),needsSync,connected:true,source:"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
+  return {id:s.id,catalogReady:c?.catalog_version===CATALOG_VERSION||(!needsSync&&job?.status==="succeeded"),needsSync,connected:true,source:s.id==="pagnier"?"public-report":"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
    sync:job&&!needsSync?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
  });
 }

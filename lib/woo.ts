@@ -5,7 +5,7 @@ export type WooProduct={id:number;name?:string;sku?:string;type?:string;manage_s
 export type Credentials={key:string;secret:string};
 export class IntegrationError extends Error {}
 export async function wooPage(storeId:StoreId,credentials:Credentials,path:string,params:Record<string,string>={},request:typeof fetch=fetch){
- const store=STORES.find(s=>s.id===storeId);if(!store)throw new IntegrationError("Loja inválida.");
+ const store=STORES.find(s=>s.id===storeId);if(!store||storeId==="pagnier")throw new IntegrationError("Loja inválida para WooCommerce.");
  const url=new URL("https://"+store.host+"/wp-json/wc/v3/"+path);
  for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);
  if(storeId==="maya")url.searchParams.set("lang","en");

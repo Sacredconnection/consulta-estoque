@@ -3,9 +3,11 @@ export const STORES = [
   { id: "sacred", name: "Sacred Snuff", short: "Sacred", host: "backend-wholesale.sacred-snuff.com", color: "#226b5b", initials: "SS" },
   { id: "maya", name: "Maya Herbs", short: "Maya", host: "backend-wholesale.mayaherbs.com", color: "#ac7330", initials: "MH" },
   { id: "sc23", name: "SC23 Trading", short: "SC23", host: "wholesale.sc23trading.com", color: "#5976b4", initials: "23" },
+  { id: "pagnier", name: "Pagnier", short: "Pagnier", host: "reports.nomus.com.br", color: "#7955a3", initials: "PG" },
 ] as const;
 export type StoreId = typeof STORES[number]["id"];
-export type Stock = { storeId: StoreId; id: number; quantity: number | null; status: string; updatedAt: string; shared?: boolean; parentId?:number; productName?:string; variationName?:string; grams?:number|null; packaging?:"can"|"bulk"|"other"|"shared" };
+export type WooStoreId = Exclude<StoreId, "pagnier">;
+export type Stock = { quantityUnit?:string; location?:string; storeId: StoreId; id: number; quantity: number | null; status: string; updatedAt: string; shared?: boolean; parentId?:number; productName?:string; variationName?:string; grams?:number|null; packaging?:"can"|"bulk"|"other"|"shared" };
 export type Product = { catalogVersion?:number; key: string; sku: string; name: string; category: string; stocks: Stock[] };
 export type Rule = { minimum: number; target: number; enabled: boolean; interval: number };
 export const DEFAULT_RULE: Rule = { minimum: 10, target: 40, enabled: true, interval: 5 };
@@ -22,7 +24,7 @@ const samples: [string,string,string,(number|null)[]][] = [
   ["RAP-FOR-10","Rapé Força · 10 g","Rapés",[14,8,23]],
 ];
 export const DEMO_PRODUCTS: Product[] = samples.map(([sku,name,category,counts],i)=>({
-  key: sku,sku,name,category,stocks: STORES.map((s,j)=>({storeId:s.id,id:100+i,quantity:counts[j],status:counts[j]===0?"outofstock":"instock",updatedAt:"",}))
+  key: sku,sku,name,category,stocks: STORES.filter(s=>s.id!=="pagnier").map((s,j)=>({storeId:s.id,id:100+i,quantity:counts[j]??null,status:counts[j]===0?"outofstock":"instock",updatedAt:"",}))
 }));
 export function normalize(s: string) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
 export function searchProducts(products: Product[], query: string) {

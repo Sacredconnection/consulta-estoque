@@ -42,11 +42,13 @@ O banco guarda snapshots, status e regras. A coluna legada credentials contém s
 
 ## Consultas e mensagens
 
-- A aba Pagnier exibe o relatório Nomus fornecido, com opção de abrir em outra janela. Ela não exige chaves WooCommerce nem banco. Seus saldos ainda não entram na consulta IA ou no catálogo consolidado.
+- Pagnier é uma fonte de estoque do relatório público Nomus `751489003726808170`. Não exige chaves WooCommerce. A sincronização lê páginas de 200 linhas, grava checkpoints no Turso e publica o catálogo somente após concluir todas as páginas. Seus produtos participam das buscas e da tabela consolidada.
+- Pagnier soma saldos por produto, revisão, empresa e setor; usa somente produtos e setores ativos que consideram disponibilidade. O saldo total da empresa não é somado novamente por setor. Unidades KG/G são preservadas. Para itens unitários, usa o peso líquido informado ou a apresentação explícita; embalagens não viram conteúdo de produto em kg.
+- As respostas com produtos mostram somente a tabela: quantidade e kg por fonte, total por SKU, total geral e subtotal de granel. No catálogo paginado, o rodapé soma todos os resultados do filtro, não apenas a página visível. Dados desconhecidos e saldos compartilhados não entram no total de kg e são sinalizados.
 - O reconhecimento de `<PREFIXO>_SITE_URL` aceita o ponto final DNS após o domínio. As chamadas WooCommerce continuam usando os endereços fixos das lojas.
 
 - A única tela é o chat, com exemplos de perguntas, status das lojas e botão Atualizar estoques.
-- As respostas são mensagens formatadas com títulos por loja e produto, listas de variações, quantidade disponível e data da última sincronização.
+- Mensagens de texto ficam restritas a erros e consultas sem correspondência; resultados de estoque são apresentados em tabela.
 - Latas: apresentações de 5, 10, 20 ou 50 g.
 - Granel (atacado): demais apresentações com peso identificado. Cada linha mostra unidades × peso unitário em kg. A resposta soma por produto, por loja e entre as lojas consultadas.
 - O peso líquido vem do atributo da apresentação, com unidade explícita em g/gr/gramas ou kg. Um nome com peso explícito pode ser usado quando não há atributo. O campo de peso de transporte e o SKU não são usados para estimar conteúdo.
@@ -80,9 +82,9 @@ O catálogo persistido possui versão de interpretação. Snapshots anteriores a
 - node scripts/test.mjs: regras de estoque, isolamento de credenciais, paginação, inglês/aliases do Polylang, embalagens, kg e saldos compartilhados.
 - npx tsc --noEmit
 - npm run build
-- Migração para Vercel validada com 28 testes, build de produção e requisições HTTP locais (página, autenticação, APIs e persistência de regras).
-- Consultas reais ao WooCommerce e ao Turso remoto dependem das credenciais de produção e não foram validadas nesta migração.
-- Teste visual de navegador não solicitado; WebMCP não verificado em contexto real.
+- 34 testes, build de produção e requisições HTTP locais (página, autenticação, APIs e persistência de regras).
+- Pagnier validada com leitura de todas as 8.326 linhas do relatório, sincronização de 5.825 posições ativas/disponíveis no Turso e consulta real por Tsunu. Essas contagens representam o momento da validação, não valores fixos do catálogo.
+- Navegador validado com resposta somente em tabela, fontes Maya/Pagnier, soma em kg e layout móvel. Credenciais WooCommerce de produção não estão disponíveis localmente; WebMCP não verificado em contexto real.
 
 ## Referências
 
