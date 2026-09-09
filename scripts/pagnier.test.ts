@@ -21,6 +21,31 @@ test('equivalent Maya and Sacred SKUs share one presentation and remain searchab
  assert.ok(ten.search.includes('raya0204'));
 });
 
+test('family queries include all presentations even when an exact parent SKU exists',()=>{
+ for(const family of ['RAYA02','RACO06','RASC01']){
+  let id=0;
+  const make=(storeId:'maya'|'sacred'|'pagnier',sku:string,grams:number|null):Product=>({key:storeId+sku,sku,name:'Rapé',category:'Rapé',stocks:[{storeId,id:++id,quantity:2,grams,status:'instock',updatedAt:'now'}]});
+  const parent=make('sacred',family,null);parent.stocks[0].shared=true;
+  const variants=[[5,'09'],[10,'04'],[20,'05'],[50,'06'],[100,'03'],[250,'02'],[500,'01']] as const;
+  const products=[parent,...variants.flatMap(([grams,suffix])=>[make('maya',family+'-'+grams,grams),make('sacred',family+suffix,grams)])];
+  const bulk=make('pagnier',family+'00',1000);bulk.stocks[0].quantityUnit='kg';products.push(bulk);
+  const unrelated=make('maya','RAXX99-10',10);
+  for(const query of [family.toLowerCase(),'estoque de '+family]){
+   const result=agentAnswer([...products,unrelated],DEFAULT_RULE,query,['maya','sacred','pagnier']);
+   assert.deepEqual(result.products,products);
+   assert.equal(buildStockRows(result.products).length,9);
+  }
+  for(const code of [family+'-10',family+'04']){
+   const result=searchProducts(products,code);
+   assert.equal(result.length,2);
+   assert.equal(buildStockRows(result)[0].sku,family+'-10');
+  }
+  const scoped=agentAnswer(products,DEFAULT_RULE,family+' na maya',['maya','sacred','pagnier']);
+  assert.equal(scoped.products.length,7);
+  assert.ok(scoped.products.every(p=>p.stocks.every(s=>s.storeId==='maya')));
+ }
+});
+
 test('equivalence keeps different weights, shared pools and unrelated SKU patterns separate',()=>{
  const make=(sku:string,grams:number,shared=false):Product=>({key:sku,sku,name:'Same name',category:'Rapé',stocks:[{storeId:'sacred',id:grams,quantity:1,grams,shared,packaging:'can',status:'instock',updatedAt:'now'}]});
  const rows=buildStockRows([make('RAYA0204',10),make('RAYA0206',50),make('RAYA02',50,true),make('OTHER0206',50)]);

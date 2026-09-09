@@ -30,7 +30,9 @@ export const DEMO_PRODUCTS: Product[] = samples.map(([sku,name,category,counts],
 export function normalize(s: string) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
 export function searchProducts(products: Product[], query: string) {
   const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
-  const exact=terms.length===1?products.filter(p=>[p.sku,...equivalenceSearchText(p).split(' ')].some(code=>normalize(code.trim())===terms[0])):[];
+  // A rapé family code must include its children even when the parent SKU exists.
+  const familyQuery=terms.length===1&&/^ra[a-z]{2}\d{2}$/.test(terms[0]);
+  const exact=terms.length===1&&!familyQuery?products.filter(p=>[p.sku,...equivalenceSearchText(p).split(' ')].some(code=>normalize(code.trim())===terms[0])):[];
   if(exact.length)return includeEquivalentProducts(products,exact);
   const matches=products.filter(p=>terms.every(t=>normalize(p.name+" "+p.sku+" "+p.category+" "+equivalenceSearchText(p)+" "+p.stocks.map(s=>(s.productName??"")+" "+(s.variationName??"")).join(" ")).includes(t)));
   return includeEquivalentProducts(products,matches);
