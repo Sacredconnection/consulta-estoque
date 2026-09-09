@@ -60,3 +60,11 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .app-header{background:#e8eddc;color:#3f5534;border-bottom:1px solid #d7dfca}
 .header-title{border-color:#c8d3ba}.header-title>span{color:#61734f}
 .refresh{background:#f6f8f0!important;color:#405a2d;border-color:#aebd98}.refresh:hover:not(:disabled){background:#dce5ce!important}
+
+.query-onboarding{max-width:600px;margin-top:32px;padding:22px 24px;border-left:3px solid #9caf74;background:#fcf9f4de;border-radius:0 16px 16px 0}
+.query-onboarding p{margin:0;color:var(--muted);font-size:13px;line-height:1.8}
+.query-onboarding .onboarding-label{font-size:9px;font-weight:600;letter-spacing:1.7px;color:#687b46}
+.query-onboarding .onboarding-example{margin:10px 0;font-size:23px;color:var(--foreground)}
+.query-onboarding code{font-family:var(--font-data),monospace;color:var(--primary);font-weight:500}
+.query-onboarding .onboarding-detail{margin-top:12px;font-size:12px}
+@media(max-width:600px){.query-onboarding{padding:17px 18px;margin-top:25px}.query-onboarding .onboarding-example{font-size:21px}.query-onboarding p{font-size:12px}}
