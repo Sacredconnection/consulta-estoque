@@ -9,3 +9,6 @@ export async function POST(request:Request){try{
  if(input.action!=="step"||!STORES.some(s=>s.id===input.storeId)||typeof input.runId!=="string"||input.runId.length>80)throw new ApiError(400,"Etapa de sincronização inválida.");
  return json(await advanceSynchronization(input.storeId,input.runId));
 }catch(e){return fail(e);}}
+
+export const runtime = "nodejs";
+export const maxDuration = 60;

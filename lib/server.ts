@@ -1,14 +1,15 @@
-import { env } from "cloudflare:workers";
+import { getDatabase } from "./database";
+import { validAccess } from "./auth";
 import { environmentConnections, type EnvironmentValues } from "./connections-env";
 import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
 import { IntegrationError, mergeCatalog } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
 type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number;catalog_version:number|null};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
-export function database(){return env.DB;}
+export function database(){return getDatabase();}
 export function authorize(request:Request,mutation=false){
- // Sites strips and forwards identity headers; the deployment access policy is owner-only.
- if(!request.headers.get("oai-authenticated-user-id"))throw new ApiError(401,"Entre com sua conta para acessar o estoque.");
+ // Validate credentials here as well as at the page boundary.
+ if(!validAccess(request))throw new ApiError(401,"Entre com seu usuário e senha para acessar o estoque.");
  if(mutation){
   const origin=request.headers.get("origin");const expected=new URL(request.url).origin;
   if(origin&&origin!==expected)throw new ApiError(403,"Origem da solicitação não permitida.");
@@ -31,7 +32,7 @@ export async function getRule():Promise<Rule>{
  return row?JSON.parse(row.payload):DEFAULT_RULE;
 }
 export function configuredEnvironmentConnections(){
- return environmentConnections(env as unknown as EnvironmentValues);
+ return environmentConnections(process.env as EnvironmentValues);
 }
 export async function ensureEnvironmentConnections(){
  const configured=configuredEnvironmentConnections();

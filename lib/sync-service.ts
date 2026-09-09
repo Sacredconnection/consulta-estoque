@@ -7,7 +7,7 @@ type Job={store_id:StoreId;run_id:string;status:string;cursor:string;started_at:
 const owned="EXISTS (SELECT 1 FROM connections WHERE id=? AND lock_token=?)";
 export async function startSynchronization(){
  const configured=await ensureEnvironmentConnections();
- if(!configured.length)throw new ApiError(400,"Configure uma loja no arquivo local de ambiente antes de sincronizar.");
+ if(!configured.length)throw new ApiError(400,"Configure uma loja nas variáveis de ambiente do servidor antes de sincronizar.");
  const current=await getConnections();
  // Repeated clicks or reloads resume an active run instead of restarting completed shops.
  if(current.some(c=>c.sync?.status==="running")&&!current.some(c=>c.needsSync))return {connections:current,message:"Atualização em andamento. Retomando do último progresso salvo."};
@@ -32,7 +32,7 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
   const previous=JSON.parse(job.cursor) as CatalogCursor;
   const result=await advanceCatalog(storeId,credentials,previous);
   const at=new Date().toISOString();
-  // Records, checkpoint and final publication commit in one D1 transaction.
+  // Records, checkpoint and final publication commit in one database transaction.
   // json_each keeps the batch bounded to a few SQL statements even for hundreds of variants.
   const statements=[
    db.prepare("INSERT INTO records (snapshot,store_id,product_id,payload) SELECT ?,?,json_extract(value,'$.stocks[0].id'),value FROM json_each(?) WHERE "+owned+" ON CONFLICT(snapshot,store_id,product_id) DO UPDATE SET payload=excluded.payload").bind(runId,storeId,JSON.stringify(result.records),storeId,token),

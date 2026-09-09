@@ -1,5 +1,9 @@
 # dependencies
 /node_modules
+/.npm-cache/
+*.db
+*.db-shm
+*.db-wal
 /.pnp
 .pnp.*
 .yarn/*

@@ -1,9 +1,8 @@
-import { env } from "cloudflare:workers";
 import { json,fail,getRule,body,ApiError,getConnections } from "@/lib/server";
 import {startSynchronization,advanceSynchronization} from "@/lib/sync-service";
 import {STORES} from "@/lib/inventory";
 export async function POST(request:Request){try{
- const expected=(env as unknown as {SYNC_JOB_TOKEN?:string}).SYNC_JOB_TOKEN;
+ const expected=process.env.SYNC_JOB_TOKEN;
  const supplied=request.headers.get("Authorization")?.replace(/^Bearer /,"");
  if(!expected||!supplied)throw new ApiError(401,"Credencial de agendamento inválida.");
  const digest=async(s:string)=>new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)));
@@ -20,3 +19,6 @@ export async function POST(request:Request){try{
  if(current.length&&current.every(c=>c.lastSync&&Date.now()-Date.parse(c.lastSync)<rule.interval*60000))return json({skipped:true,reason:"Intervalo mínimo ainda não atingido."});
  return json(await startSynchronization());
 }catch(e){return fail(e);}}
+
+export const runtime = "nodejs";
+export const maxDuration = 60;

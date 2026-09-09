@@ -2,9 +2,23 @@
 
 Interface web somente com o agente de consulta de estoque. Pergunte por nome ou SKU para comparar as lojas configuradas, consultar estoques baixos e obter sugestões de reposição.
 
-## Credenciais locais
+## Publicação na Vercel
 
-As chaves ficam exclusivamente em **.env.local**, ignorado pelo Git. Não há formulário nem endpoint para cadastrar chaves. Elas não entram no navegador, no banco, no build ou na hospedagem.
+Este projeto usa Next.js e banco SQLite remoto (Turso). A configuração está em `vercel.json`.
+
+1. Crie um banco libSQL no Turso e obtenha a URL e o token.
+2. Em Settings → Environment Variables na Vercel, configure `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `APP_AUTH_USER` e `APP_AUTH_PASSWORD` (senha longa e exclusiva). Configure também os pares `WOO_*_KEY`/`WOO_*_SECRET` das lojas, conforme `.env.example`. Nunca use o prefixo `NEXT_PUBLIC_` para esses valores.
+3. Para criar as tabelas, coloque a URL e o token do mesmo banco em `.env.local` e execute `npm ci` e `npm run db:migrate`. O comando pode ser repetido; ele registra as migrações aplicadas. Snapshots do antigo D1 não são copiados automaticamente: faça uma nova sincronização.
+4. Envie as alterações ao repositório conectado à Vercel e faça um novo deploy. Use a raiz do repositório como Root Directory; o preset é Next.js, o build é `npm run build` e a saída é `.next`.
+5. Abra o site, informe o usuário e a senha no diálogo do navegador e clique em Atualizar estoques.
+
+O build não exige credenciais. Sem usuário/senha configurados, o site retorna uma mensagem de configuração (503) e mantém os dados bloqueados. O banco é persistente entre invocações e deploys. As etapas de sincronização têm limite de 60 segundos. O endpoint de jobs usa `SYNC_JOB_TOKEN` independente; nenhum agendamento é criado automaticamente.
+
+Referências: [Next.js na Vercel](https://vercel.com/docs/frameworks/full-stack/nextjs) e [cliente libSQL/Turso](https://docs.turso.tech/sdk/ts/reference).
+
+## Credenciais
+
+Em desenvolvimento, as chaves ficam em **.env.local**, ignorado pelo Git. Em produção, ficam nas variáveis de ambiente da Vercel. Não há formulário nem endpoint para cadastrar chaves. Elas são lidas apenas no servidor e não são enviadas ao navegador nem gravadas no banco.
 
 Prefixos locais aceitos:
 - BRINCR_SITE_URL, BRINCR_CONSUMER_KEY, BRINCR_CONSUMER_SECRET
@@ -12,7 +26,7 @@ Prefixos locais aceitos:
 
 A associação usa o hostname HTTPS exato de Sacred Snuff, Maya Herbs ou SC23 Trading. Os nomes canônicos de .env.example também são aceitos. Lojas sem um par completo de credenciais ficam ocultas, inclusive nos resultados. Após editar .env.local, reinicie o servidor local.
 
-O site publicado não acessa o arquivo deste computador; as consultas reais estão disponíveis no localhost configurado.
+O site publicado usa as variáveis da Vercel; não acessa o arquivo deste computador.
 
 ## Desenvolvimento
 
@@ -20,11 +34,11 @@ Node >=22.13.0 e npm.
 
 1. npm install
 2. Configure .env.local com as credenciais de leitura WooCommerce.
-3. Aplique, em ordem, as migrações de drizzle/ ao D1 local com Wrangler. A migração 0001 cria o progresso persistente da sincronização.
+3. Configure as variáveis de acesso e banco. Para um banco local, crie a pasta `work` e use `TURSO_DATABASE_URL=file:work/estoque.db`. Execute `npm run db:migrate`.
 4. npm run dev
-5. Abra /signin-with-chatgpt?return_to=/ na sessão local se necessário.
+5. Abra http://localhost:3000 e informe o usuário e a senha configurados.
 
-O D1 guarda snapshots, status e regras. A coluna legada credentials contém somente o marcador environment.
+O banco guarda snapshots, status e regras. A coluna legada credentials contém somente o marcador environment.
 
 ## Consultas e mensagens
 
@@ -52,7 +66,7 @@ O catálogo persistido possui versão de interpretação. Snapshots anteriores a
 - HTTPS, Basic Auth somente no servidor, origens fixas e redirecionamentos recusados.
 - Produtos e variações paginados: até 10.000 itens por endpoint e 50.000 registros por loja.
 - Cada etapa lê no máximo uma página de produtos e seis páginas de variações em paralelo.
-- Registros e progresso são gravados na mesma transação D1. A publicação acontece somente ao concluir todas as etapas da loja. Falhas preservam o último snapshot compatível.
+- Registros e progresso são gravados na mesma transação do banco. A publicação acontece somente ao concluir todas as etapas da loja. Falhas preservam o último snapshot compatível.
 - O botão retoma execuções interrompidas; progresso e erros aparecem junto ao chat.
 - Atualização automática com a página aberta, respeitando as regras já salvas. Fechar a página preserva as etapas concluídas.
 - Não há agendador externo ativo. scripts/sync-job.mjs e POST /api/jobs/sync preparam essa integração, condicionada a autenticação de máquina e infraestrutura própria.
@@ -63,7 +77,8 @@ O catálogo persistido possui versão de interpretação. Snapshots anteriores a
 - node scripts/test.mjs: regras de estoque, isolamento de credenciais, paginação, inglês/aliases do Polylang, embalagens, kg e saldos compartilhados.
 - npx tsc --noEmit
 - npm run build
-- Verificação real das APIs locais e WooCommerce com as credenciais do arquivo local.
+- Migração para Vercel validada com 28 testes, build de produção e requisições HTTP locais (página, autenticação, APIs e persistência de regras).
+- Consultas reais ao WooCommerce e ao Turso remoto dependem das credenciais de produção e não foram validadas nesta migração.
 - Teste visual de navegador não solicitado; WebMCP não verificado em contexto real.
 
 ## Referências
