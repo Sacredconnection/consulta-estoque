@@ -75,8 +75,9 @@ export default function Home(){
  const [catalogQuery,setCatalogQuery]=useState(""),[catalogPage,setCatalogPage]=useState(1);
  const syncRunning=useRef(false),syncAbort=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null);
  async function load(){
-  try{const r=await fetch("/api/inventory",{cache:"no-store"});if(!r.ok)throw Error("Não foi possível carregar as lojas. Tente atualizar novamente.");
+  try{const r=await fetch("/api/inventory",{cache:"no-store"});if(!r.ok){const failure=await r.json().catch(()=>null) as {error?:unknown}|null;throw Error(typeof failure?.error==="string"?failure.error:r.status===401?"Entre novamente com seu usuário e senha para carregar as lojas.":"Não foi possível carregar as lojas. Tente atualizar novamente.");}
    const d=await r.json() as {connections:Connection[];rule:Rule;products:Product[]};setConnections(d.connections);setRule(d.rule);setCatalogProducts(d.products);
+   setNotice(d.connections.length?"":"Nenhuma loja foi reconhecida nas variáveis do servidor. Confira os pares WOO_SACRED_KEY/SECRET, WOO_MAYA_KEY/SECRET e WOO_SC23_KEY/SECRET no ambiente Production da Vercel e faça um novo deploy.");
   }catch(e){setNotice((e as Error).message);}finally{setReady(true);}
  }
  useEffect(()=>{void load();return()=>syncAbort.current?.abort();},[]);
@@ -103,7 +104,7 @@ export default function Home(){
 
    async function sync(automatic=false){
     if(syncRunning.current)return;
-    if(!connections.length){if(!automatic)setNotice("Configure uma loja no .env.local antes de atualizar.");return;}
+    if(!connections.length){if(!automatic)setNotice("Configure as credenciais de uma loja nas variáveis de ambiente do servidor antes de atualizar.");return;}
     syncRunning.current=true;setBusy(true);
     const controller=new AbortController();syncAbort.current=controller;
     async function call(input:unknown){

@@ -1,14 +1,17 @@
 import { createClient, type Client, type InValue, type ResultSet } from '@libsql/client';
+import { DatabaseConfigurationError } from './database-errors';
 
 let client: Client | undefined;
 export function getClient(): Client {
   if (client) return client;
-  const url = process.env.TURSO_DATABASE_URL;
-  if (!url) throw new Error('Configure TURSO_DATABASE_URL e aplique npm run db:migrate.');
+  const url = process.env.TURSO_DATABASE_URL?.trim();
+  if (!url) throw new DatabaseConfigurationError();
   if (process.env.VERCEL && !/^(libsql|https):\/\//.test(url)) {
-    throw new Error('Na Vercel, configure um banco remoto persistente.');
+    throw new DatabaseConfigurationError();
   }
-  client = createClient({ url, authToken: process.env.TURSO_AUTH_TOKEN });
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
+  if (process.env.VERCEL && !authToken) throw new DatabaseConfigurationError();
+  client = createClient({ url, authToken });
   return client;
 }
 

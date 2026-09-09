@@ -2,6 +2,18 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { validAccess } from '../lib/auth';
 import { getDatabase, getClient } from '../lib/database';
+import { LibsqlError } from '@libsql/client';
+import { DatabaseConfigurationError, databaseErrorMessage } from '../lib/database-errors';
+
+test('database diagnostics distinguish setup and missing schema without exposing driver details', () => {
+  assert.match(databaseErrorMessage(new DatabaseConfigurationError())!, /TURSO_DATABASE_URL/);
+  assert.match(databaseErrorMessage(new LibsqlError('no such table: settings', 'SQLITE_ERROR'))!, /db:migrate/);
+  const secret = 'secret-token-and-private-url';
+  const message = databaseErrorMessage(new LibsqlError(secret, 'SERVER_ERROR'))!;
+  assert.match(message, /Turso/);
+  assert.equal(message.includes(secret), false);
+  assert.equal(databaseErrorMessage(new Error(secret)), null);
+});
 
 test('access rejects forged Sites identity and requires configured credentials', () => {
   process.env.APP_AUTH_USER = 'owner';
