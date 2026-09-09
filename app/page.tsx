@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight, Check, CircleHelp, LoaderCircle, Network, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,7 +111,7 @@ export default function Home(){
   finally{setChatBusy(false);input.current?.focus();}
  }
  return <div className="chat-app">
-  <header className="app-header"><a href="/" className="brand" aria-label="Elo, início"><Network size={25}/><span>elo<span className="period">.</span></span></a><div className="header-title">Agente de estoque<span>WHOLESALE</span></div>
+  <header className="app-header"><a href="/" className="brand" aria-label="MS Lumiar, início"><Image src="/ms-lumiar-logo.png" alt="MS Lumiar" width={901} height={370} priority/></a><div className="header-title">Agente de estoque<span>WHOLESALE</span></div>
    <Button variant="outline" className="refresh" disabled={busy||!ready||!connections.length} onClick={()=>void sync(false,!connections.some(c=>c.sync?.status==="running"))} title="Força nova leitura das fontes. Abrir o site e consultar produtos usa o cache persistente."><RefreshCw size={16} className={busy?"spin":""}/>{busy?"Atualizando…":connections.some(c=>c.sync?.status==="running")?"Retomar atualização":"Atualizar manualmente"}</Button>
   </header>
   <main className={"chat-main "+(activeView==="catalog"?"catalog-active":"")}>

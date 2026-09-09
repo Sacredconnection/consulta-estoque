@@ -51,3 +51,12 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .catalog-header h1{color:var(--primary);font-weight:600}.catalog-search{border-radius:20px}.catalog-pages button{border-radius:18px}.catalog-pages button:hover:not(:disabled){background:#edf1df}
 .composer{border-radius:23px;background:#fffefb;box-shadow:0 6px 28px #3947140b;padding:18px 18px 18px 24px}.composer:focus-within{box-shadow:0 0 0 3px #648b2518}.composer>button{border-radius:50%;width:44px;height:44px;background:var(--primary)}.composer>button:hover:not(:disabled){background:#406406}.composer textarea{font-size:14px}.composer textarea:focus-visible{outline:none}.composer-dock>p{color:#687052}
 @media(max-width:600px){.app-header{height:80px;padding:0 15px;gap:12px}.brand{height:91px;padding:0 16px;font-size:31px;border-radius:0 0 22px 22px}.header-title{padding-left:11px;font-size:10px}.header-title>span{font-size:7px;letter-spacing:1.4px}.refresh{font-size:10px;padding:0 10px;max-width:132px;white-space:normal;line-height:1.3;height:38px}.refresh svg{flex-shrink:0}.chat-main{padding-inline:18px}.store-strip{padding-top:29px;font-size:11px}.view-tabs button{padding:9px 13px;font-size:11px}.welcome{padding-top:34px}.welcome h1{font-size:36px;letter-spacing:-1.3px}.welcome::before{inset:0 -10px 0 12%;opacity:.45}.welcome>p{font-size:13px}.suggestions button{font-size:12px;padding:14px 13px;gap:12px}.composer{padding:13px 14px;border-radius:20px}.composer textarea{font-size:16px}.composer>button{width:38px;height:38px}.catalog-header h1{font-size:32px}.query-history-action{font-size:10px}}
+
+.brand{width:273px;height:auto;padding:0;flex-shrink:0;background:transparent;border-radius:0;box-shadow:none}
+.brand img{display:block;width:100%;height:auto}
+@media(max-width:600px){.brand{width:180px;height:auto;padding:0;border-radius:0}.header-title{display:none}}
+@media(max-width:380px){.brand{width:146px}}
+/* Softer header surface, with the original brand artwork preserved. */
+.app-header{background:#e8eddc;color:#3f5534;border-bottom:1px solid #d7dfca}
+.header-title{border-color:#c8d3ba}.header-title>span{color:#61734f}
+.refresh{background:#f6f8f0!important;color:#405a2d;border-color:#aebd98}.refresh:hover:not(:disabled){background:#dce5ce!important}
