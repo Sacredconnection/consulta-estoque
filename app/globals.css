@@ -68,3 +68,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .query-onboarding code{font-family:var(--font-data),monospace;color:var(--primary);font-weight:500}
 .query-onboarding .onboarding-detail{margin-top:12px;font-size:12px}
 @media(max-width:600px){.query-onboarding{padding:17px 18px;margin-top:25px}.query-onboarding .onboarding-example{font-size:21px}.query-onboarding p{font-size:12px}}
+
+/* Source colors continue through both columns, including empty cells and totals. */
+.stock-table .store-column{background:color-mix(in srgb,var(--store-color) 7%,white)}
+.stock-table .store-start{border-left:1px solid color-mix(in srgb,var(--store-color) 25%,white)}
+.stock-table thead .store-column{background:color-mix(in srgb,var(--store-color) 16%,white);color:color-mix(in srgb,var(--store-color) 75%,#172219)}
+.stock-table thead .store-band{border-top:3px solid var(--store-color)}
+.stock-table tfoot .store-column{background:color-mix(in srgb,var(--store-color) 14%,white)}
+.stock-table tbody tr:hover .store-column{background:color-mix(in srgb,var(--store-color) 13%,white)}
+.stock-table .stock-cell.out{color:#9b332e;font-weight:500}
+.stock-table .stock-cell.low{color:#805611;font-weight:500}
