@@ -78,3 +78,27 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .stock-table tbody tr:hover .store-column{background:color-mix(in srgb,var(--store-color) 13%,white)}
 .stock-table .stock-cell.out{color:#9b332e;font-weight:500}
 .stock-table .stock-cell.low{color:#805611;font-weight:500}
+
+/* Prioritize names and comparable balances over repeated source metadata. */
+.stock-table{table-layout:fixed;font-size:13px;line-height:1.55}
+.stock-table th,.stock-table td{padding:14px 12px;vertical-align:middle}
+.stock-table th{font-size:11px;letter-spacing:.25px}
+.stock-table .numeric{font-size:14px;font-variant-numeric:tabular-nums;letter-spacing:0}
+.stock-table thead .numeric{font-size:11px}
+.stock-table thead .store-band{text-align:center;padding:12px}
+.stock-table .store-heading{display:flex;justify-content:center;font-size:12px;gap:8px}
+.stock-table .sku-cell{font-size:12px;white-space:normal;overflow-wrap:anywhere}
+.product-primary{display:block;color:#303b27;font-weight:500;overflow-wrap:anywhere}
+.product-details{margin-top:5px;font-size:12px;line-height:1.6}
+.product-details summary{width:fit-content;color:#52693e;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.product-details summary:focus-visible{outline:2px solid var(--ring);outline-offset:3px;border-radius:2px}
+.product-details dl{margin:10px 0 0;padding:12px;background:#f5f7ee;border-radius:8px;overflow-wrap:anywhere}
+.product-details dl>div+div{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.product-details dt{font-weight:600}.product-details dd{margin:3px 0;color:#5d6751}
+.stock-table .presentation-cell{font-size:13px;color:#52613f}
+.stock-table .stock-cell small{font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:#61694f;margin-top:4px;white-space:normal;overflow-wrap:anywhere}
+.stock-table .stock-cell .source-sku{font-family:var(--font-data),monospace;font-size:11px;color:#5f6658}
+.stock-table .kg-total{font-weight:700}
+.stock-table .stock-group th{text-align:left;background:#f2f4e9;color:#53643b;font-size:12px;font-weight:600;text-transform:none;letter-spacing:.2px;padding:10px 12px;border-top:1px solid #d7dfc8;border-bottom:1px solid #d7dfc8}
+.stock-table tfoot th{font-size:11px}.stock-table tfoot td{padding:15px 12px}
+.table-note{font-size:11px;line-height:1.7;max-width:1100px}
