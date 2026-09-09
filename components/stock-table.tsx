@@ -22,6 +22,6 @@ export function StockTable({rows,storeIds,rule,title,totalRows=rows}:{rows:Stock
 function StoreHead(){return <><th className="numeric">Quantidade</th><th className="numeric">Kg</th></>;}
 function StoreCells({cell,minimum}:{cell:StockRow['stores'][StoreId];minimum:number}){
  const level=!cell||cell.quantity===null?'unknown':cell.quantity<=0?'out':cell.unit==='un.'&&cell.quantity<=minimum?'low':'ok';
- return <><td className={'numeric stock-cell '+level} title={cell?.locations.join('\n')}>{!cell?'—':cell.quantity===null?'N/D':number(cell.quantity)+' '+cell.unit}{cell?.partialQuantity?' *':''}{cell?.shared?<small>comp.</small>:null}</td><td className="numeric">{cell?kg(cell):'—'}</td></>;
+ return <><td className={'numeric stock-cell '+level} title={cell?.locations.join('\n')}>{!cell?'—':cell.quantity===null?'N/D':number(cell.quantity)+' '+cell.unit}{cell?.partialQuantity?' *':''}{cell?.shared?<small>comp.</small>:null}{cell?.skus.length?<small className="source-sku" title="Código original nesta fonte">{cell.skus.join(' / ')}</small>:null}</td><td className="numeric">{cell?kg(cell):'—'}</td></>;
 }
 function TotalCells({text}:{text:string}){return <><td/><td className="numeric"><strong>{text}</strong></td></>;}

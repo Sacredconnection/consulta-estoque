@@ -5,7 +5,7 @@ import { environmentConnections, connectionSetupIssues, type EnvironmentValues }
 import { STORES, DEFAULT_RULE, scopeProductsToStores, type Rule, type Product, type StoreId } from "./inventory";
 import { IntegrationError, mergeCatalog } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
-type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number;catalog_version:number|null};
+type Connection={id:StoreId;credentials:string;snapshot:string|null;last_sync:string|null;error:string|null;lock_until:number;catalog_version:number|null;source_revision:number;snapshot_revision:number};
 export class ApiError extends Error {constructor(public status:number,message:string){super(message);}}
 export function database(){return getDatabase();}
 export function authorize(request:Request,mutation=false){
@@ -47,16 +47,19 @@ export async function ensureEnvironmentConnections(){
 export async function getConnections(){
  const configured=await ensureEnvironmentConnections(),db=database();
  const [rows,jobs]=await Promise.all([
-  db.prepare("SELECT id,snapshot,last_sync,error,lock_until,(SELECT json_extract(payload,'$.catalogVersion') FROM records WHERE store_id=connections.id AND snapshot=connections.snapshot LIMIT 1) AS catalog_version FROM connections").all<Connection>(),
+  db.prepare("SELECT id,snapshot,last_sync,error,lock_until,source_revision,snapshot_revision,(SELECT json_extract(payload,'$.catalogVersion') FROM records WHERE store_id=connections.id AND snapshot=connections.snapshot LIMIT 1) AS catalog_version FROM connections").all<Connection>(),
   db.prepare("SELECT store_id,run_id,status,cursor,updated_at,error FROM sync_jobs").all<{store_id:StoreId;run_id:string;status:string;cursor:string;updated_at:string;error:string|null}>(),
  ]);
  return STORES.filter(s=>configured.some(c=>c.id===s.id)).map(s=>{
   const c=rows.results.find(r=>r.id===s.id),job=jobs.results.find(j=>j.store_id===s.id);
   const cursor=job?JSON.parse(job.cursor) as {catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
-  const needsSync=cursor?.catalogVersion!==CATALOG_VERSION;
-  const running=!needsSync&&job?.status==="running";
-  return {id:s.id,catalogReady:c?.catalog_version===CATALOG_VERSION||(!needsSync&&job?.status==="succeeded"),needsSync,connected:true,source:s.id==="pagnier"?"public-report":"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
-   sync:job&&!needsSync?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
+  const incompatible=cursor?.catalogVersion!==CATALOG_VERSION;
+  const catalogReady=c?.catalog_version===CATALOG_VERSION||(!incompatible&&job?.status==="succeeded");
+  const sourceRevision=c?.source_revision??0;
+  const needsSync=!catalogReady||sourceRevision>(c?.snapshot_revision??0);
+  const running=!incompatible&&job?.status==="running";
+  return {id:s.id,catalogReady,needsSync,sourceRevision,connected:true,source:s.id==="pagnier"?"public-report":"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
+   sync:job&&!incompatible?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
  });
 }
 export async function state(){

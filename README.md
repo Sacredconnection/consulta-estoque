@@ -51,6 +51,7 @@ O banco guarda snapshots, status e regras. A coluna legada credentials contém s
 
 - A única tela é o chat, com exemplos de perguntas, status das lojas e botão Atualizar estoques.
 - Mensagens de texto ficam restritas a erros e consultas sem correspondência; resultados de estoque são apresentados em tabela.
+- [Regras de equivalência](docs/product-equivalences.md) agrupam códigos diferentes do mesmo produto e apresentação. A família RAYA02 já relaciona Maya, Sacred e Pagnier, preservando os códigos originais por fonte.
 - Latas: apresentações de 5, 10, 20 ou 50 g.
 - Granel (atacado): demais apresentações com peso identificado. Cada linha mostra unidades × peso unitário em kg. A resposta soma por produto, por loja e entre as lojas consultadas.
 - O peso líquido vem do atributo da apresentação, com unidade explícita em g/gr/gramas ou kg. Um nome com peso explícito pode ser usado quando não há atributo. O campo de peso de transporte e o SKU não são usados para estimar conteúdo.
@@ -70,12 +71,14 @@ O catálogo persistido possui versão de interpretação. Snapshots anteriores a
 
 ## Atualização
 
+O estoque usa cache persistente no Turso e não expira por tempo. Abrir o site ou fazer uma consulta reutiliza o snapshot. As verificações periódicas só iniciam sincronização para fontes sem catálogo ou marcadas como alteradas. Veja [cache e notificações de alteração](docs/cache.md) para configurar webhooks WooCommerce e o aviso opcional da Pagnier. Sem notificações configuradas, mudanças externas exigem o botão Atualizar manualmente.
+
 - HTTPS, Basic Auth somente no servidor, origens fixas e redirecionamentos recusados.
 - Produtos e variações paginados: até 10.000 itens por endpoint e 50.000 registros por loja.
 - Cada etapa lê no máximo uma página de produtos e seis páginas de variações em paralelo.
 - Registros e progresso são gravados na mesma transação do banco. A publicação acontece somente ao concluir todas as etapas da loja. Falhas preservam o último snapshot compatível.
 - O botão retoma execuções interrompidas; progresso e erros aparecem junto ao chat.
-- Atualização automática com a página aberta, respeitando as regras já salvas. Fechar a página preserva as etapas concluídas.
+- Com a página aberta, alterações sinalizadas são processadas no intervalo configurado. Fechar a página preserva as etapas concluídas. Fontes com cache válido não são reiniciadas quando outra fonte precisa atualizar.
 - Não há agendador externo ativo. scripts/sync-job.mjs e POST /api/jobs/sync preparam essa integração, condicionada a autenticação de máquina e infraestrutura própria.
 - Não há envio de e-mails ou mensagens externas.
 
@@ -84,7 +87,7 @@ O catálogo persistido possui versão de interpretação. Snapshots anteriores a
 - node scripts/test.mjs: regras de estoque, isolamento de credenciais, paginação, inglês/aliases do Polylang, embalagens, kg e saldos compartilhados.
 - npx tsc --noEmit
 - npm run build
-- 34 testes, build de produção e requisições HTTP locais (página, autenticação, APIs e persistência de regras).
+- 40 testes, build de produção e requisições HTTP locais (página, autenticação, APIs, persistência, cache e equivalências).
 - Pagnier validada com leitura de todas as 8.326 linhas do relatório, sincronização de 5.825 posições ativas/disponíveis no Turso e consulta real por Tsunu. Essas contagens representam o momento da validação, não valores fixos do catálogo.
 - Navegador validado com resposta somente em tabela, fontes Maya/Pagnier, soma em kg e layout móvel. Credenciais WooCommerce de produção não estão disponíveis localmente; WebMCP não verificado em contexto real.
 

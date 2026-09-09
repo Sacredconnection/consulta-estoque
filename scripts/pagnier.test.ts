@@ -4,6 +4,29 @@ import { parsePagnierRows, advancePagnier } from '../lib/pagnier';
 import { buildStockRows, totalMass } from '../lib/stock-table';
 import { agentAnswer, DEFAULT_RULE } from '../lib/inventory';
 import { initialCursor } from '../lib/sync-cursor';
+import type { Product } from '../lib/inventory';
+
+test('equivalent Maya and Sacred SKUs share one presentation and remain searchable by either code',()=>{
+ const make=(storeId:'maya'|'sacred'|'pagnier',sku:string,grams:number,id:number,quantity:number):Product=>({key:'sku:'+sku,sku,name:storeId==='maya'?'Yawanawa Força Feminina':'Yawanawa Feminine Force Rapeh',category:'Rapé',stocks:[{storeId,id,quantity,grams,packaging:grams<=50?'can':'bulk',status:'instock',updatedAt:'now'}]});
+ const products=[make('maya','RAYA02-10',10,1,109),make('sacred','RAYA0204',10,2,-42),make('pagnier','RAYA0204',10,3,5),make('maya','RAYA02-50',50,4,2),make('sacred','RAYA0206',50,5,3)];
+ const rows=buildStockRows(products);assert.equal(rows.length,2);
+ const ten=rows.find(r=>r.sku==='RAYA02-10')!;
+ assert.equal(ten.stores.maya?.quantity,109);assert.equal(ten.stores.sacred?.quantity,-42);assert.equal(ten.stores.pagnier?.quantity,5);
+ assert.deepEqual(ten.stores.sacred?.skus,['RAYA0204']);
+ assert.equal(totalMass(Object.values(ten.stores)).kg,1.1400000000000001);
+ for(const code of ['RAYA02-10','RAYA0204','ARAYA0204']){
+  const result=agentAnswer(products,DEFAULT_RULE,'estoque de '+code,['maya','sacred','pagnier']);
+  assert.equal(result.products.length,3);assert.equal(buildStockRows(result.products).length,1);
+ }
+ assert.ok(ten.search.includes('raya0204'));
+});
+
+test('equivalence rejects conflicting weights, shared pools and unapproved families',()=>{
+ const make=(sku:string,grams:number,shared=false):Product=>({key:sku,sku,name:'Same name',category:'Rapé',stocks:[{storeId:'sacred',id:grams,quantity:1,grams,shared,packaging:'can',status:'instock',updatedAt:'now'}]});
+ const rows=buildStockRows([make('RAYA0204',50),make('RAYA0206',50),make('RAYA02',50,true),make('OTHER0206',50)]);
+ assert.equal(rows.length,4);
+ assert.equal(rows.filter(r=>r.key.startsWith('equivalent:')).length,1);
+});
 
 const names=['Código do produto','Revisão do produto','Descrição do produto','Unidade de medida abreviatura','Código da empresa','Nome da empresa','Código do setor de estoque','Nome do setor de estoque','Setor de estoque ativo?','Setor de estoque considera saldo disponível?','Saldo em estoque do produto no setor','Tipo de produto','Grupo de produto','Família de produto','Produto ativo?','Peso líquido unitário (kg)'];
 const columns=names.map((name,i)=>({name,id:String(100+i)}));

@@ -5,7 +5,11 @@ export async function GET(request:Request){try{authorize(request);return json({c
 export async function POST(request:Request){try{
  authorize(request,true);
  const input=request.headers.get("content-type")?.includes("application/json")?await body(request):{action:"start"};
- if(!input.action||input.action==="start")return json(await startSynchronization());
+ if(!input.action||input.action==="start"){
+  if(input.force!==undefined&&typeof input.force!=="boolean")throw new ApiError(400,"Opção de atualização inválida.");
+  if(input.storeId!==undefined&&!STORES.some(s=>s.id===input.storeId))throw new ApiError(400,"Fonte inválida.");
+  return json(await startSynchronization({force:input.force,storeId:input.storeId}));
+ }
  if(input.action!=="step"||!STORES.some(s=>s.id===input.storeId)||typeof input.runId!=="string"||input.runId.length>80)throw new ApiError(400,"Etapa de sincronização inválida.");
  return json(await advanceSynchronization(input.storeId,input.runId));
 }catch(e){return fail(e);}}

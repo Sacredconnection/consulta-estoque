@@ -4,6 +4,8 @@ export const connections=sqliteTable("connections",{
  snapshot:text("snapshot"),lastSync:text("last_sync"),error:text("error"),
  lockUntil:integer("lock_until").notNull().default(0),
  lockToken:text("lock_token"),
+ sourceRevision:integer("source_revision").notNull().default(0),
+ snapshotRevision:integer("snapshot_revision").notNull().default(0),
 });
 export const records=sqliteTable("records",{
  snapshot:text("snapshot").notNull(), storeId:text("store_id").notNull(),

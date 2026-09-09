@@ -4,18 +4,20 @@ import { IntegrationError } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
 import type { StoreId } from "./inventory";
 import { advancePagnier } from "./pagnier";
+import { shouldStartSynchronization } from "./cache-policy";
 type Job={store_id:StoreId;run_id:string;status:string;cursor:string;started_at:string;updated_at:string;error:string|null};
 const owned="EXISTS (SELECT 1 FROM connections WHERE id=? AND lock_token=?)";
-export async function startSynchronization(){
+export async function startSynchronization(options:{force?:boolean;storeId?:StoreId}={}){
  const configured=await ensureEnvironmentConnections();
  if(!configured.length)throw new ApiError(400,"Configure uma loja nas variáveis de ambiente do servidor antes de sincronizar.");
  const current=await getConnections();
- // Repeated clicks or reloads resume an active run instead of restarting completed shops.
- if(current.some(c=>c.sync?.status==="running")&&!current.some(c=>c.needsSync))return {connections:current,message:"Atualização em andamento. Retomando do último progresso salvo."};
+ // Completed snapshots are persistent; elapsed time is not invalidation.
+ const selected=current.filter(c=>(!options.storeId||c.id===options.storeId)&&shouldStartSynchronization(c,options.force));
+ if(!selected.length)return {connections:current,cached:!current.some(c=>c.sync?.status==="running"),message:current.some(c=>c.sync?.status==="running")?"Retomando somente as atualizações pendentes.":"Estoque carregado do cache persistente. Nenhuma alteração sinalizada pelas fontes."};
  const at=new Date().toISOString();
- await database().batch(configured.flatMap(c=>[
+ await database().batch(selected.flatMap(c=>[
   database().prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND COALESCE(json_extract(cursor,'$.catalogVersion'),0)!=?)").bind(c.id,c.id,CATALOG_VERSION),
-  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=?").bind(c.id,crypto.randomUUID(),"running",JSON.stringify(initialCursor()),at,at,CATALOG_VERSION),
+  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=?").bind(c.id,crypto.randomUUID(),"running",JSON.stringify({...initialCursor(),sourceRevision:c.sourceRevision}),at,at,CATALOG_VERSION),
   database().prepare("UPDATE connections SET error=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND status='running')").bind(c.id,c.id),
  ]));
  return {connections:await getConnections(),message:"Atualização iniciada. O progresso de cada loja será mostrado abaixo."};
@@ -39,7 +41,7 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
    db.prepare("INSERT INTO records (snapshot,store_id,product_id,payload) SELECT ?,?,json_extract(value,'$.stocks[0].id'),value FROM json_each(?) WHERE "+owned+" ON CONFLICT(snapshot,store_id,product_id) DO UPDATE SET payload=excluded.payload").bind(runId,storeId,JSON.stringify(result.records),storeId,token),
    db.prepare("UPDATE sync_jobs SET cursor=?,status=?,updated_at=?,error=NULL WHERE store_id=? AND run_id=? AND "+owned).bind(JSON.stringify(result.cursor),result.done?"succeeded":"running",at,storeId,runId,storeId,token),
   ];
-  if(result.done)statements.push(db.prepare("UPDATE connections SET snapshot=?,last_sync=?,error=NULL WHERE id=? AND lock_token=?").bind(runId,at,storeId,token));
+  if(result.done)statements.push(db.prepare("UPDATE connections SET snapshot=?,last_sync=?,snapshot_revision=?,error=NULL WHERE id=? AND lock_token=?").bind(runId,at,previous.sourceRevision??0,storeId,token));
   const committed=await db.batch(statements);
   if(!committed[1].meta.changes)return {busy:true,connections:await getConnections()};
   if(result.done)await db.prepare("DELETE FROM records WHERE store_id=? AND snapshot!=? AND "+owned).bind(storeId,runId,storeId,token).run();

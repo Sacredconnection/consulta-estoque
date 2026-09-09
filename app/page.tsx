@@ -34,14 +34,16 @@ export default function Home(){
  const [activeView,setActiveView]=useState<"assistant"|"catalog">("assistant"),[catalogProducts,setCatalogProducts]=useState<Product[]>([]);
  const [catalogQuery,setCatalogQuery]=useState(""),[catalogPage,setCatalogPage]=useState(1);
  const syncRunning=useRef(false),syncAbort=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null);
+ const loadedVersions=useRef<Record<string,string|null|undefined>>({});
  async function load(){
   try{const r=await fetch("/api/inventory",{cache:"no-store"});if(!r.ok){const failure=await r.json().catch(()=>null) as {error?:unknown}|null;throw Error(typeof failure?.error==="string"?failure.error:r.status===401?"Entre novamente com seu usuário e senha para carregar as lojas.":"Não foi possível carregar as lojas. Tente atualizar novamente.");}
    const d=await r.json() as {connections:Connection[];rule:Rule;products:Product[];connectionSetup?:ConnectionSetupIssue[]};setConnections(d.connections);setRule(d.rule);setCatalogProducts(d.products);setConnectionSetup(d.connectionSetup??[]);
+   loadedVersions.current=Object.fromEntries(d.connections.map(c=>[c.id,c.lastSync]));
    setNotice(d.connections.length?"":"Nenhuma loja foi reconhecida nas variáveis do servidor. Confira os pares WOO_SACRED_KEY/SECRET, WOO_MAYA_KEY/SECRET e WOO_SC23_KEY/SECRET no ambiente Production da Vercel e faça um novo deploy.");
   }catch(e){setNotice((e as Error).message);}finally{setReady(true);}
  }
  useEffect(()=>{void load();return()=>syncAbort.current?.abort();},[]);
- useEffect(()=>{if(ready&&connections.some(c=>c.sync?.status==="running"||((c.needsSync||!c.lastSync)&&!c.error)))void sync();},[ready]);
+ useEffect(()=>{if(ready&&connections.some(c=>c.sync?.status==="running"||(c.needsSync&&!c.error)))void sync(true);},[ready]);
  useEffect(()=>{if(!ready||!rule.enabled||!connections.length)return;const timer=setInterval(()=>void sync(true),rule.interval*60000);return()=>clearInterval(timer);},[ready,rule.enabled,rule.interval,connections.length]);
  useEffect(()=>{if(messages.length)bottom.current?.scrollIntoView({block:"end"});},[messages,chatBusy]);
    useEffect(()=>{
@@ -62,19 +64,20 @@ export default function Home(){
  const visibleCatalogRows=filteredCatalogRows.slice(catalogStart,catalogStart+CATALOG_PAGE_SIZE);
  useEffect(()=>setCatalogPage(1),[catalogQuery]);
 
-   async function sync(automatic=false){
+   async function sync(automatic=false,force=false){
     if(syncRunning.current)return;
     if(!connections.length){if(!automatic)setNotice("Configure as credenciais de uma loja nas variáveis de ambiente do servidor antes de atualizar.");return;}
     syncRunning.current=true;setBusy(true);
     const controller=new AbortController();syncAbort.current=controller;
     async function call(input:unknown){
       const r=await fetch("/api/sync",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(input),signal:AbortSignal.any([controller.signal,AbortSignal.timeout(60000)])});
-      const d=await r.json() as {connections:Connection[];error?:string;message?:string;busy?:boolean};
+      const d=await r.json() as {connections:Connection[];error?:string;message?:string;busy?:boolean;cached?:boolean};
       if(!r.ok)throw Error(d.error||"Não foi possível consultar esta etapa.");return d;
     }
     try{
-      const initial=await call({action:"start"});let current=initial.connections;
+      const initial=await call({action:"start",force});let current=initial.connections;
       setConnections(current);if(!automatic)setNotice(initial.message||"Atualização iniciada.");
+      if(initial.cached){if(current.some(c=>loadedVersions.current[c.id]!==c.lastSync))await load();return;}
       let completed=current.filter(c=>c.sync?.status==="succeeded").length;
       while(!controller.signal.aborted&&current.some(c=>c.sync?.status==="running")){
         const active=current.filter(c=>c.sync?.status==="running");
@@ -88,7 +91,7 @@ export default function Home(){
       }
       if(!controller.signal.aborted){
         await load();
-        setNotice(current.map(c=>{const name=STORES.find(s=>s.id===c.id)!.name;return name+": "+(c.sync?.status==="succeeded"?(c.sync.records.toLocaleString("pt-BR")+" registros atualizados"):c.error||"consulta não concluída");}).join(" · "));
+        if(!automatic)setNotice(current.map(c=>{const name=STORES.find(s=>s.id===c.id)!.name;return name+": "+(c.sync?.status==="succeeded"?(c.sync.records.toLocaleString("pt-BR")+" registros em cache"):c.error||"consulta não concluída");}).join(" · "));
       }
     }catch(e){
       if(!controller.signal.aborted)setNotice("Atualização pausada: "+(e as Error).message+" Clique em atualizar para retomar do último progresso salvo.");
@@ -105,7 +108,7 @@ export default function Home(){
  }
  return <div className="chat-app">
   <header className="app-header"><a href="/" className="brand" aria-label="Elo, início"><Network size={25}/><span>elo<span className="period">.</span></span></a><div className="header-title">Agente de estoque<span>WHOLESALE</span></div>
-   <Button variant="outline" className="refresh" disabled={busy||!ready||!connections.length} onClick={()=>void sync()}><RefreshCw size={16} className={busy?"spin":""}/>{busy?"Atualizando…":connections.some(c=>c.sync?.status==="running")?"Retomar atualização":"Atualizar estoques"}</Button>
+   <Button variant="outline" className="refresh" disabled={busy||!ready||!connections.length} onClick={()=>void sync(false,!connections.some(c=>c.sync?.status==="running"))} title="Força nova leitura das fontes. Abrir o site e consultar produtos usa o cache persistente."><RefreshCw size={16} className={busy?"spin":""}/>{busy?"Atualizando…":connections.some(c=>c.sync?.status==="running")?"Retomar atualização":"Atualizar manualmente"}</Button>
   </header>
   <main className={"chat-main "+(activeView==="catalog"?"catalog-active":"")}>
    <section className="store-strip" aria-label="Status das lojas">

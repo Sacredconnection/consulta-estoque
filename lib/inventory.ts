@@ -1,4 +1,5 @@
 import { formatStockMessage } from "./stock-message";
+import { equivalenceSearchText } from "./product-equivalences";
 export const STORES = [
   { id: "sacred", name: "Sacred Snuff", short: "Sacred", host: "backend-wholesale.sacred-snuff.com", color: "#226b5b", initials: "SS" },
   { id: "maya", name: "Maya Herbs", short: "Maya", host: "backend-wholesale.mayaherbs.com", color: "#ac7330", initials: "MH" },
@@ -29,7 +30,7 @@ export const DEMO_PRODUCTS: Product[] = samples.map(([sku,name,category,counts],
 export function normalize(s: string) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase(); }
 export function searchProducts(products: Product[], query: string) {
   const terms=normalize(query).trim().split(/\s+/).filter(Boolean);
-  return products.filter(p=>terms.every(t=>normalize(p.name+" "+p.sku+" "+p.category+" "+p.stocks.map(s=>(s.productName??"")+" "+(s.variationName??"")).join(" ")).includes(t)));
+  return products.filter(p=>terms.every(t=>normalize(p.name+" "+p.sku+" "+p.category+" "+equivalenceSearchText(p)+" "+p.stocks.map(s=>(s.productName??"")+" "+(s.variationName??"")).join(" ")).includes(t)));
 }
 export function stockLevel(stock: Stock, rule: Rule) {
   if(stock.quantity===null) return "unknown";

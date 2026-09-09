@@ -15,6 +15,13 @@
       "when": 1788893236719,
       "tag": "0001_puzzling_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1788979156600,
+      "tag": "0002_persistent_cache",
+      "breakpoints": true
     }
   ]
 }
