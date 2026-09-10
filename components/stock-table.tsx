@@ -1,4 +1,6 @@
-import type { CSSProperties } from 'react';
+"use client";
+import {useState,type CSSProperties} from 'react';
+import {Download,LoaderCircle} from 'lucide-react';
 import { STORES, type StoreId, type Rule } from '@/lib/inventory';
 import { totalMass, type Mass, type StockRow } from '@/lib/stock-table';
 const storeStyle=(id:StoreId)=>({'--store-color':STORES.find(store=>store.id===id)!.color}) as CSSProperties;
@@ -17,13 +19,16 @@ function ProductName({row,storeIds}:{row:StockRow;storeIds:StoreId[]}){
  return <><span className="product-primary">{primary}</span><details className="product-details"><summary>Ver detalhes</summary><dl>{storeIds.filter(id=>row.stores[id]).map(id=>{const cell=row.stores[id]!;return <div key={id}><dt>{STORES.find(store=>store.id===id)!.name}</dt><dd>{cell.names?.join(' / ')||row.product}</dd><dd>SKU: {cell.skus.join(' / ')||'Sem SKU'}</dd>{cell.locations.length>0&&<dd>{cell.locations.join(' · ')}</dd>}</div>;})}</dl></details></>;
 }
 
-export function StockTable({rows,storeIds,rule,title,totalRows=rows}:{rows:StockRow[];storeIds:StoreId[];rule:Rule;title?:string;totalRows?:StockRow[]}){
+export function StockTable({rows,storeIds,rule,title,totalRows=rows,exportContext='Consulta de estoque'}:{rows:StockRow[];storeIds:StoreId[];rule:Rule;title?:string;totalRows?:StockRow[];exportContext?:string}){
+ const [exporting,setExporting]=useState(false),[exportError,setExportError]=useState('');
+ async function download(){setExporting(true);setExportError('');try{const {exportStockExcel}=await import('@/lib/stock-export');await exportStockExcel(totalRows,storeIds,exportContext);}catch{setExportError('Não foi possível exportar. Tente novamente.');}finally{setExporting(false);}}
  if(!rows.length)return null;
  const totals=storeIds.map(id=>totalMass(totalRows.flatMap(row=>row.stores[id]?[row.stores[id]!]:[])));
  const grand=totalMass(totals.filter(t=>t.kg!==null||t.partial));
  const groups=['Embalagens e unidades','Granel por peso','Saldos compartilhados'].map(label=>({label,rows:rows.filter(row=>rowGroup(row)===label)})).filter(group=>group.rows.length);
  return <section className="stock-table-section">
-  {title&&<h2>{title}</h2>}
+  <div className="stock-result-toolbar">{title&&<h2>{title}</h2>}<button type="button" className="stock-export" onClick={()=>void download()} disabled={exporting}>{exporting?<LoaderCircle size={16} className="spin"/>:<Download size={16}/>} {exporting?'Exportando…':'Exportar Excel'}</button></div>
+  {exportError&&<p role="alert">{exportError}</p>}
   <div className="stock-table-scroll"><table className="stock-table" style={{minWidth:580+storeIds.length*210}}>
    <caption className="sr-only">Estoque por SKU e fonte, com totais em quilogramas</caption>
    <colgroup><col style={{width:125}}/><col/><col style={{width:120}}/>{storeIds.map(id=><col key={id} span={2} style={{width:105}}/>)}<col style={{width:105}}/></colgroup>

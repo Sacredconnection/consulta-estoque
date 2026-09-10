@@ -1,3 +1,5 @@
+import { stockCategories } from './category-filter';
+import { combineSacredChannels } from './sacred-catalog';
 import { getDatabase } from "./database";
 import { databaseErrorMessage } from "./database-errors";
 import { validAccess } from "./auth";
@@ -36,7 +38,7 @@ export async function getRule():Promise<Rule>{
  return row?JSON.parse(row.payload):DEFAULT_RULE;
 }
 export function configuredEnvironmentConnections(){
- return [...environmentConnections(process.env as EnvironmentValues),{id:"pagnier" as const}];
+ return [...environmentConnections(process.env as EnvironmentValues),{id:"pagnier" as const,retail:undefined}];
 }
 export async function ensureEnvironmentConnections(){
  const configured=configuredEnvironmentConnections();
@@ -53,11 +55,11 @@ export async function getConnections(){
  ]);
  return STORES.filter(s=>configured.some(c=>c.id===s.id)).map(s=>{
   const c=rows.results.find(r=>r.id===s.id),job=jobs.results.find(j=>j.store_id===s.id);
-  const cursor=job?JSON.parse(job.cursor) as {catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
-  const incompatible=cursor?.catalogVersion!==CATALOG_VERSION;
+  const cursor=job?JSON.parse(job.cursor) as {sacredSources?:string;catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
+  const incompatible=cursor?.catalogVersion!==CATALOG_VERSION||(s.id==="sacred"&&cursor?.sacredSources!==(configured.find(x=>x.id==="sacred")?.retail?.siteUrl??""));
   const catalogReady=c?.catalog_version===CATALOG_VERSION||(!incompatible&&job?.status==="succeeded");
   const sourceRevision=c?.source_revision??0;
-  const needsSync=!catalogReady||sourceRevision>(c?.snapshot_revision??0);
+  const needsSync=incompatible||!catalogReady||sourceRevision>(c?.snapshot_revision??0);
   const running=!incompatible&&job?.status==="running";
   return {id:s.id,catalogReady,needsSync,sourceRevision,connected:true,source:s.id==="pagnier"?"public-report":"environment",lastSync:c?.last_sync??null,error:running?null:job?.error??c?.error??null,
    sync:job&&!incompatible?{runId:job.run_id,status:job.status,productsDone:cursor!.productsDone,totalProducts:cursor!.totalProducts,records:cursor!.records,updatedAt:job.updated_at,locked:running&&(c?.lock_until??0)>Date.now()}:null};
@@ -67,6 +69,8 @@ export async function state(){
  const [connections,rule]=await Promise.all([getConnections(),getRule()]);
  const ids=connections.map(c=>c.id);
  const records=ids.length?await database().prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot WHERE r.store_id IN ("+ids.map(()=>"?").join(",")+")").bind(...ids).all<{payload:string}>():{results:[]};
- const products=scopeProductsToStores(mergeCatalog(visibleCatalog(records.results.map(r=>JSON.parse(r.payload) as Product).filter(p=>p.catalogVersion===CATALOG_VERSION))),ids);
+ const products=scopeProductsToStores(mergeCatalog(combineSacredChannels(visibleCatalog(records.results.map(r=>withSourceCategories(JSON.parse(r.payload) as Product)).filter(p=>p.catalogVersion===CATALOG_VERSION)))),ids);
  return {demo:false,products,rule,connections,connectionSetup:connectionSetupIssues(process.env)};
 }
+
+function withSourceCategories(p:Product):Product{return {...p,stocks:p.stocks.map(s=>({...s,categories:stockCategories(p,s)}))};}

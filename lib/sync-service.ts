@@ -1,3 +1,4 @@
+import { advanceSacred } from './sacred-catalog';
 import { database,configuredEnvironmentConnections,ensureEnvironmentConnections,getConnections,getRule,ApiError } from "./server";
 import { initialCursor,advanceCatalog,type CatalogCursor } from "./sync-cursor";
 import { IntegrationError } from "./woo";
@@ -17,8 +18,8 @@ export async function startSynchronization(options:{force?:boolean;storeId?:Stor
  if(!selected.length)return {connections:current,cached:!current.some(c=>c.sync?.status==="running"),message:current.some(c=>c.sync?.status==="running")?"Retomando somente as atualizações pendentes.":"Estoque carregado do cache persistente. Nenhuma alteração sinalizada pelas fontes."};
  const at=new Date().toISOString();
  await database().batch(selected.flatMap(c=>[
-  database().prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND COALESCE(json_extract(cursor,'$.catalogVersion'),0)!=?)").bind(c.id,c.id,CATALOG_VERSION),
-  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=?").bind(c.id,crypto.randomUUID(),"running",JSON.stringify({...initialCursor(),sourceRevision:c.sourceRevision}),at,at,CATALOG_VERSION),
+  database().prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND (COALESCE(json_extract(cursor,'$.catalogVersion'),0)!=? OR (store_id='sacred' AND json_extract(cursor,'$.sacredSources') IS NOT ?)))").bind(c.id,c.id,CATALOG_VERSION,configured.find(x=>x.id==="sacred")?.retail?.siteUrl??""),
+  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR (COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=? OR (sync_jobs.store_id='sacred' AND json_extract(sync_jobs.cursor,'$.sacredSources') IS NOT ?))").bind(c.id,crypto.randomUUID(),"running",JSON.stringify({...initialCursor(),sourceRevision:c.sourceRevision,...(c.id==="sacred"?{sacredSources:configured.find(x=>x.id==="sacred")?.retail?.siteUrl??""}:{})}),at,at,CATALOG_VERSION,configured.find(x=>x.id==="sacred")?.retail?.siteUrl??""),
   database().prepare("UPDATE connections SET error=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND status='running')").bind(c.id,c.id),
  ]));
  return {connections:await getConnections(),message:"Atualização iniciada. O progresso de cada loja será mostrado abaixo."};
@@ -34,7 +35,8 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
   if(!job||job.run_id!==runId||JSON.parse(job.cursor).catalogVersion!==CATALOG_VERSION)throw new ApiError(409,"A execução foi substituída. Consulte o progresso atual.");
   if(job.status!=="running")return {busy:false,connections:await getConnections()};
   const previous=JSON.parse(job.cursor) as CatalogCursor;
-  const result=credentials.id==="pagnier"?await advancePagnier(previous):await advanceCatalog(storeId,credentials,previous);
+  if(credentials.id!=='pagnier'&&credentials.configurationError)throw new IntegrationError(credentials.configurationError);
+  const result=credentials.id==="pagnier"?await advancePagnier(previous):storeId==="sacred"?await advanceSacred(credentials,previous):await advanceCatalog(storeId,credentials,previous);
   const at=new Date().toISOString();
   // Records, checkpoint and final publication commit in one database transaction.
   // json_each keeps the batch bounded to a few SQL statements even for hundreds of variants.

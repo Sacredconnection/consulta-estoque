@@ -1,6 +1,16 @@
 import { STORES, type WooStoreId } from "./inventory";
 export type EnvironmentValues=Record<string,string|undefined>;
-export type EnvironmentConnection={id:WooStoreId;key:string;secret:string};
+export type EnvironmentConnection={id:WooStoreId;key:string;secret:string;retail?:{siteUrl:string;key:string;secret:string};configurationError?:string};
+export function sacredRetailEnvironment(values:EnvironmentValues){
+ const names=['SACRED_RETAIL_SITE_URL','SACRED_RETAIL_CONSUMER_KEY','SACRED_RETAIL_CONSUMER_SECRET'];
+ if(!names.some(n=>values[n]?.trim()))return;
+ const [siteUrl,key,secret]=names.map(n=>values[n]?.trim());
+ if(!siteUrl||!key||!secret)throw new Error('Preencha SACRED_RETAIL_SITE_URL, SACRED_RETAIL_CONSUMER_KEY e SACRED_RETAIL_CONSUMER_SECRET.');
+ let url:URL;try{url=new URL(siteUrl);}catch{throw new Error('SACRED_RETAIL_SITE_URL deve ser uma URL HTTPS válida.');}
+ if(url.protocol!=='https:'||url.username||url.password||url.port||url.search||url.hash||url.pathname!=='/'||url.hostname.replace(/\.$/,'')==='backend-wholesale.sacred-snuff.com')throw new Error('SACRED_RETAIL_SITE_URL deve apontar para a raiz HTTPS da loja de varejo, diferente do atacado.');
+ url.hostname=url.hostname.replace(/\.$/,'');
+ return {siteUrl:url.origin,key,secret};
+}
 const runtimeNames:Record<WooStoreId,string>={sacred:"WOO_SACRED",maya:"WOO_MAYA",sc23:"WOO_SC23"};
 // Match legacy prefixes by their configured hostname, never by a guessed shop name.
 export function canonicalStoreEnvironment(values:EnvironmentValues):Record<string,string>{
@@ -24,13 +34,17 @@ export function canonicalStoreEnvironment(values:EnvironmentValues):Record<strin
 }
 export function environmentConnections(values:EnvironmentValues):EnvironmentConnection[]{
  const canonical=canonicalStoreEnvironment(values);
- return STORES.flatMap(store=>{if(store.id==="pagnier")return [];const name=runtimeNames[store.id],key=canonical[name+"_KEY"],secret=canonical[name+"_SECRET"];return key&&secret?[{id:store.id,key,secret}]:[];});
+ let retail:ReturnType<typeof sacredRetailEnvironment>,configurationError:string|undefined;
+ try{retail=sacredRetailEnvironment(values);}catch(error){configurationError=(error as Error).message;}
+ return STORES.flatMap(store=>{if(store.id==="pagnier")return [];const name=runtimeNames[store.id],key=canonical[name+"_KEY"],secret=canonical[name+"_SECRET"];return key&&secret?[{id:store.id,key,secret,...(store.id==='sacred'?{...(retail?{retail}:{}),...(configurationError?{configurationError}:{})}:{})}]:[];});
 }
 
 export type ConnectionSetupIssue={id:WooStoreId;message:string};
 export function connectionSetupIssues(values:EnvironmentValues):ConnectionSetupIssue[]{
  const configured=environmentConnections(values);
  return STORES.flatMap(store=>{
+  const issue=configured.find(c=>c.id===store.id)?.configurationError;
+  if(issue)return [{id:store.id as WooStoreId,message:issue}];
   if(store.id==='pagnier'||configured.some(c=>c.id===store.id))return [];
   const prefix=runtimeNames[store.id];
   // Sacred and Maya are expected sources. Show optional SC23 only if started.
