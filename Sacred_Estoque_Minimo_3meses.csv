@@ -1,0 +1,650 @@
+SKU,Produto,Variacao,Vendido_12_meses,Ritmo_mensal,Estoque_atual,Estoque_minimo_3_meses
+8,Palo Santo Incense Wood,1⅜oz,0,0,0,0
+ACMB0100,Peruvian Agua de Florida,70ml,16,1.33,0,4
+ACMB0101,Peruvian Agua de Florida,270ml,16,1.33,0,4
+AISE0100,Shamanic Earrings,Sword of Saint Barbara,0,0,3,0
+AISE0200,Shamanic Earrings,Red Coral Snake,0,0,2,0
+AISE0300,Shamanic Earrings,Black Coral Snake,0,0,4,0
+AISE0400,Shamanic Earrings,Red Coral Snake XL,0,0,5,0
+AISE0500,Sacred Serpent Necklace,Red Coral Snake,0,0,3,0
+AISE0600,Sacred Serpent Necklace,Black Coral Snake,0,0,3,0
+AISE0700,Sacred Serpent Necklace,Boa Constrictor,0,0,3,0
+AISE0800,Sacred Serpents Resin Bracelet,Red,0,0,0,0
+AISE0801,Sacred Serpents Resin Bracelet,Black,4,0.33,0,1
+AIYA0101,Yawanawa Earrings - Large,Black/Yellow,0,0,1,0
+AIYA0102,Yawanawa Earrings - Large,Light Green,0,0,0,0
+AIYA0103,Yawanawa Earrings - Large,White/Yellow,0,0,1,0
+AIYA0104,Yawanawa Earrings - Large,Red,0,0,1,0
+AIYA0105,Yawanawa Earrings - Large,Colorful,0,0,0,0
+AIYA0106,Yawanawa Earrings - Large,Blue,0,0,0,0
+AIYA0107,Yawanawa Earrings,AIYA0107,0,0,0,0
+AIYA0108,Yawanawa Earrings,AIYA0108,1,0.08,0,1
+AIYA0109,Yawanawa Earrings,AIYA0109,0,0,0,0
+AIYA0110,Yawanawa Earrings,AIYA0110,0,0,0,0
+AIYA0111,Yawanawa Earrings,AIYA0111,1,0.08,0,1
+AIYA0112,Yawanawa Earrings - Large,Pink/Yellow,0,0,1,0
+AIYA0113,Yawanawa Earrings - Xtra Large,Blue,0,0,0,0
+AIYA0114,Yawanawa Earrings - Xtra Large,Gold,0,0,1,0
+AIYA0115,Yawanawa Earrings - Xtra Large,Red/Yellow,0,0,0,0
+AIYA0116,Yawanawa Earrings - Xtra Large,Black/White,0,0,1,0
+AIYA0117,Yawanawa Earrings - Xtra Large,Blue/Green,0,0,0,0
+AIYA0200,Yawanawa Necklace,,0,0,1,0
+AIYA0201,Yawanawa Necklace,Pink,0,0,2,0
+AIYA0202,Yawanawa Necklace,Green,0,0,0,0
+AIYA0203,Yawanawa Necklace - Cerimonial,,0,0,1,0
+AIYA0301,Yawanawá Wristband - Medium,Orange/Black,0,0,0,0
+AIYA0303,Yawanawá Wristband - Large,White/Blue,0,0,0,0
+AIYA0304,Yawanawá Wristband - Large,White/Green,0,0,0,0
+AIYA0305,Yawanawá Wristband - Large,Brown,0,0,0,0
+AIYA0306,Yawanawá Wristband - Medium,Red/Yellow,0,0,0,0
+AIYA0308,Yawanawá Wristband - Large,Black/Green,0,0,0,0
+AIYA0309,Yawanawá Wristband - Medium,Blue/Black,0,0,0,0
+AIYA0310,Yawanawá Wristband,Green/Black,0,0,0,0
+AIYA0311,Yawanawá Wristband,Black/White,0,0,0,0
+AIYA0313,Yawanawá Wristband - Large,Blue/Green,0,0,0,0
+AIYA0314,Yawanawá Wristband - Medium,Yellow/Black,0,0,0,0
+AIYA0316,Yawanawá Wristband - Medium,Light Green,0,0,0,0
+AIYA0317,Yawanawá Wristband,Yellow/Red,0,0,0,0
+AIYA0318,Yawanawá Wristband,Blue,0,0,0,0
+AIYA0400,Yawanawá Wristband Pair,AIYA0400,0,0,0,0
+AIYA0401,Yawanawá Wristband Pair,AIYA0401,0,0,1,0
+AIYA0402,Yawanawá Wristband Pair,AIYA0402,0,0,1,0
+AIYA0500,Yawanawá Wristband Pair - Large,,0,0,0,0
+AIYA0600,Yawanawa Necklace,Light Pink,0,0,1,0
+AIYA0601,Yawanawa Necklace,Black/Blue,0,0,1,0
+AIYA0602,Yawanawa Necklace,Black/White,1,0.08,0,1
+AIYA0603,Yawanawa Necklace,Colorful,0,0,1,0
+AIYA0800,Yawanawá Wristband - Small Beads,Black/White,0,0,0,0
+AIYA0801,Yawanawá Wristband - Small Beads,Green/Blue,0,0,0,0
+AIYA0802,Yawanawá Wristband - Small Beads,Light Pink,0,0,0,0
+AIYA0803,Yawanawá Wristband - Small Beads,Yellow/Red,0,0,0,0
+AIYA0804,Yawanawá Wristband - Small Beads,Brown/White,0,0,0,0
+AMJM01,Ambil – 50g,,222,18.5,0,56
+AWSE0100,"Ashwagandha Extract - Withania Somnifera - MAYA, 10ml",,14,1.17,5,4
+BOSE0100,"Bobinsana Extract - Calliandra Angustifolia, Micro Dosing - MAYA,10ml",,11,0.92,0,3
+CAPL0300,Fuerza Virilis in Capsules - Male Aphrodisiac,,2,0.17,0,1
+CAPL0800,Mulungu in Capsules - Erythrina Mulungu - Sleep & Stress relief,,13,1.08,0,4
+CHMX0100,Chilcuague Extract - Mouth Spray With Mint Flavor - 25ml,,0,0,4,0
+CHMX0101,Chilcuague Lipbalm with Beeswax,,11,0.92,9,3
+CHMX0102,Chilcuague Massage Oil - Balsamo de Oro - Grandma's Recipe - 60ml,,6,0.5,13,2
+CHMX0103,Dry Chilcuague Root - 8g,,17,1.42,19,5
+CHMX0104,Pure Chilcuague Extract - Concentrated Culinary Spray - 60ml,,24,2,4,6
+CHMX0105,Chilcuague Extract - Mouth Spray - Honey with tangerine - 8ml,,23,1.92,2,6
+CHMX0106,Chilcuague Extract - Mouth Spray - Lyptus - 8ml,,14,1.17,10,4
+CHMX0107,Chilcuas Nasal Spray – Chilcuague (Heliopsis longipes) 30 ml,,15,1.25,23,4
+CICO0100,Artisanal Hand Rolled Cigar From Colombia,,146,12.17,0,37
+EXPL0103,Mulungu Tincture - 30ml,,25,2.08,6,7
+EXPL0204,Dragon Blood - 10ml,,76,6.33,0,19
+FVTC0100,Tauari Mapacho Smudge - Unit,,124,10.33,49,31
+INFX0100,Fenix Incense Sticks - Benjoim - 100% Natural Benzoin Hand Made Incense from Brazil,,10,0.83,9,3
+INFX0200,Fenix Incense Sticks - Breuzinho - 100% Natural Grey Copal Hand Made Incense from Brazil,,20,1.67,0,5
+INFX0300,Fenix Incense Sticks - Capim Limão - Lemongrass Flavoured Hand Made 100% Natural Incense from Brazil,,7,0.58,12,2
+INFX0500,Fenix Incense Sticks - Citronella - Hand Made 100% Natural Mosquito Repellent Incense from Brazil,,5,0.42,0,2
+INFX0700,Fenix Incense Sticks - Styrax,,6,0.5,0,2
+INFX0800,Fenix Incense Sticks - Gerânio - 100% Natural Geranium Hand Made Incense from Brazil,,20,1.67,4,5
+INFX0900,Fenix Incense Sticks - Myrrh,,17,1.42,0,5
+INFX1000,Fenix Incense Sticks - Pure Frankincense,,15,1.25,0,4
+INFX1100,Fenix Incense Sticks - Palo Santo,,0,0,0,0
+INFX1200,Fenix Incense Sticks - Patchouli,,3,0.25,13,1
+INFX1300,Fenix Incense Sticks - White Sage,,10,0.83,9,3
+INFX1400,Fenix Incense Sticks - 7 Sacred Herbs,,0,0,10,0
+INFX1500,Fenix Incense Sticks - Rue,,5,0.42,8,2
+INFX1600,Fenix Incense Sticks - Rosemary,,9,0.75,4,3
+INFX1900,Fenix Incense Sticks - Sea Salt & Guinea,,4,0.33,8,1
+INGM0103,Natural Smudge – Lavender for Peace,,3,0.25,28,1
+INGM0104,"Natural Smudge – Love, Come to Me!",,11,0.92,4,3
+INGM0105,Natural Smudge – Pure Joy!,,14,1.17,0,4
+INMS0200,String Smudge,,7,0.58,28,2
+INPL0301,"Incense Resin Breu Branco - 1,7Oz (50g)",,9,0.75,4,3
+KIEH0100,Condor Eagle Activation Kit,,0,0,0,0
+KIFV0100,"Five Tribes Kit - 5 x 0,35oz(10g)",,0,0,0,0
+KIHK01,"Huni Kuin Kit - 10 x 0,17oz (5g)",,2,0.17,0,1
+KISD0100,"Shawãdawa Kit - 4 x 0,35oz(10g)",,2,0.17,0,1
+KISK0100,Rapé Starter Kit,,6,0.5,0,2
+KUAA0100,Kuripe - Ararunart,Black,3,0.25,4,1
+KUAA0102,Kuripe - Ararunart,White,3,0.25,1,1
+KUAA0103,Kuripe - Ararunart,Yellow,0,0,5,0
+KUAA0104,Kuripe - Ararunart,Pink,0,0,0,0
+KUAA0105,Kuripe - Ararunart,Brown,5,0.42,0,2
+KUAA0106,Kuripe - Ararunart,Red,3,0.25,14,1
+KUAA0107,Kuripe - Ararunart,Light,1,0.08,0,1
+KUAA0300,Kuripe - Feather Ararunart,Brown,1,0.08,5,1
+KUAA0301,Kuripe - Feather Ararunart,White,0,0,0,0
+KUAA0302,Kuripe - Feather Ararunart,Black,0,0,0,0
+KUBA0101,Balinese Wooden Kuripe,Waru Lot,12,1,10,3
+KUBA0102,Balinese Wooden Kuripe,Cemara,66,5.5,0,17
+KUBA0103,Balinese Wooden Kuripe,Tamarind,0,0,20,0
+KUBA0104,Balinese Wooden Kuripe,Dark Waru,28,2.33,23,7
+KUBA0105,Balinese Wooden Kuripe,Teak,25,2.08,0,7
+KUBA0106,Balinese Wooden Kuripe,Agar,26,2.17,4,7
+KUBA0107,Balinese Wooden Kuripe,Crocodile,72,6,14,18
+KUBA0109,Balinese Wooden Kuripe,Coconut,0,0,0,0
+KUBA0110,Balinese Wooden Kuripe,Dark Sono,0,0,15,0
+KUBA0111,Balinese Wooden Kuripe,Iron,0,0,22,0
+KUBA0200,Wooden Kuripe From Bali - The Grip,,7,0.58,6,2
+KUBA0300,"Kuripe - Fibonacci - Tropical Hard Wood Kuripe, Hand Cut from Bali",,1,0.08,6,1
+KUBA0400,"Kuripe - Vine of the Souls - Tropical Hard Wood Kuripe, Hand Carved from Bali",,1,0.08,5,1
+KUBA0500,Sacred Vulcano - Lava Kuripe from Bali,,12,1,10,3
+KUBA0600,"Kuripe - Jaguar - Tropical Hard Wood Kuripe, Hand Carved from Bali",,8,0.67,3,2
+KUBA0700,Wooden Kuripe From Bali - Kambo Power,,8,0.67,2,2
+KUBA0800,Wooden Kuripe From Bali - Cosmic Infinity,,6,0.5,4,2
+KUBA0900,Wooden Kuripe From Bali - Handheld Power Kuripe,,3,0.25,9,1
+KUIE0100,Bamboo Kuripe - Mysterious Coral Snake,,8,0.67,9,2
+KUIE0101,Bamboo Kuripe - Ancestral Boa Constrictor,,9,0.75,2,3
+KUIE0102,Bamboo Kuripe - Saint George's Sword,,2,0.17,2,1
+KUIE0103,Bamboo Kuripe - Blossoming Floral,,8,0.67,11,2
+KUIE0104,Bamboo Kuripe Mysterious Black Coral Snake,,0,0,15,0
+KUIE0200,Bamboo Kuripe - Sacred Hummingbird,,30,2.5,0,8
+KUOF0100,High End Adjustable Kuripe with Sacred Geometry,Pajé,0,0,14,0
+KUOF0101,High End Adjustable Kuripe with Sacred Geometry,Honeycomb,3,0.25,7,1
+KUOF0102,High End Adjustable Kuripe with Sacred Geometry,Kenê,0,0,3,0
+KUOF0200,High End Adjustable Kuripe with Sacred Geometry,Cubic,0,0,2,0
+KUOF0201,High End Adjustable Kuripe with Sacred Geometry,Cosmos,2,0.17,2,1
+KURF01,Mixed Hardwood Kuripe,,1,0.08,24,1
+KURF02,Hardwood Kuripe - Circular,,5,0.42,21,2
+KURF0300,Hardwood Kuripe Totem,Hummingbird,1,0.08,3,1
+KURF0400,Hardwood Kuripe Totem,Serpent,0,0,5,0
+KURF0500,Hardwood Kuripe Totem,Jaguar,1,0.08,3,1
+KURF0600,Hardwood Kuripe Totem,Wolf,0,0,5,0
+KURF0700,Hardwood Kuripe Totem,Eagle,1,0.08,1,1
+KUSE0100,Kuripe - Senna,,12,1,10,3
+KUSE0300,Extra‑Large Bamboo Kuripe – Búzios Senna,Green,0,0,6,0
+KUSE0301,Extra‑Large Bamboo Kuripe – Búzios Senna,Red,0,0,2,0
+KUSE0302,Extra‑Large Bamboo Kuripe – Búzios Senna,Yellow,0,0,5,0
+KUSM0100,Steel Kuripe,,24,2,0,6
+KUSM0200,Copper Kuripe,,0,0,0,0
+KUSM0300,Brass Kuripe,,0,0,0,0
+KUTF0100,Kuripe Sacred Flow,,0,0,20,0
+KUTP0100,Kuripe - Eagle,,0,0,12,0
+KUTP0200,Kuripe - Buzio,,3,0.25,5,1
+KUTP0300,Kuripe - Crystal,,11,0.92,10,3
+KUTP04,Kuripe - Jagube,Green,3,0.25,4,1
+KUTP0401,Kuripe - Jagube,Red,0,0,10,0
+KUTP0500,Kuripe - Murmuru,,0,0,9,0
+KUTP0601,Kuripe - Blue Bird,,1,0.08,9,1
+KUTP0602,Kuripe - Black Bird,,4,0.33,4,1
+KUTP0603,Bambu and Resin Kuripe - Yellow Birdie,,5,0.42,0,2
+KUTP0800,Kuripe with Snuff Container,,6,0.5,15,2
+KUTP1000,Kuripe - Double Barrel,,0,0,5,0
+KUTP1101,Kuripe - Double Barrel Crystal,Red,2,0.17,0,1
+KUTP1102,Kuripe - Double Barrel Crystal,Dark Green,0,0,6,0
+KUTP1103,Kuripe - Double Barrel Crystal,Green,0,0,2,0
+KUTP1104,Kuripe - Double Barrel Crystal,Purple,0,0,0,0
+KUTP1105,Kuripe - Double Barrel Crystal,Colorful,0,0,0,0
+KUTP1106,Kuripe - Double Barrel Crystal,Gray,0,0,2,0
+KUTP1107,Kuripe - Double Barrel Crystal,Blue,4,0.33,0,1
+KUTP1108,Kuripe - Double Barrel Crystal,Light Green,0,0,0,0
+KUTP1109,Kuripe - Double Barrel Crystal,Black,0,0,0,0
+KUTP1200,Kuripe - Crystal XL,Gray,0,0,4,0
+KUTP1201,Kuripe - Crystal XL,Green,0,0,9,0
+KUTP1202,Kuripe - Crystal XL,Red,0,0,8,0
+KUTP1203,Kuripe - Crystal XL,Blue,1,0.08,2,1
+KUTP1204,Kuripe - Crystal XL,Yellow,0,0,6,0
+KUTP1205,Kuripe - Crystal XL,Light Green,0,0,6,0
+KUTP1206,Kuripe - Crystal XL,Light Blue,0,0,0,0
+KUTP1207,Kuripe - Crystal XL,Purple,0,0,0,0
+KUTP1400,Kuripe - Hare Haux,Black,0,0,4,0
+KUTP1401,Kuripe - Hare Haux,Gray,4,0.33,5,1
+KUTP1500,Kuripe - Kaya Keximãwã,,0,0,8,0
+KUTP1600,Kuripe - Hummingbird,,1,0.08,2,1
+KUTP1900,Kuripe - Sacred Trinity,,4,0.33,0,1
+KUTP2000,Kuripe - Hummingbird Marajá,Gray,0,0,5,0
+KUTP2001,Kuripe - Hummingbird Marajá,Blue,0,0,0,0
+KUTP2400,Kuripe - Tetê Pawã,,1,0.08,4,1
+KUTP2700,Kuripe - Kambo,,4,0.33,6,1
+KUTP2800,Kuripe Bamboo - Steppen Wolf,,4,0.33,6,1
+KUTP2900,Kuripe Bamboo - Simple Black,,18,1.5,14,5
+KUTP3000,Kuripe Bamboo - Harpy,,3,0.25,7,1
+KUWA0100,Adjustable Kuripe,,14,1.17,0,4
+KUWE0300,Kuripe - Xtra Large,,12,1,8,3
+KUWE0304,Kuripe Kambo - Xtra Large,,1,0.08,0,1
+KUWE0400,Kuripe - Sacred Animals,Green Serpent,1,0.08,3,1
+KUWE0401,Kuripe - Sacred Animals,Yellow Serpent,0,0,0,0
+KUWE0402,Kuripe - Sacred Animals,Brown Serpent,1,0.08,1,1
+KUWE0403,Kuripe - Sacred Animals,Light Brown Serpent,0,0,0,0
+KUWE0500,Kuripe - Sacred Animals,Kambo,0,0,6,0
+KUWE0600,Kuripe - Sacred Animals,Serpent & Kambo,0,0,0,0
+KUWE0700,Kuripe Amazona - Xtra Large,,1,0.08,0,1
+MAPL0100,"Cocoa Butter 100% Pure - 1,75Oz (50g)",,9,0.75,9,3
+OGCO0100,100% Organic Ceremonial Cacao,,280,23.33,58,70
+OGCO0200,Ceremonial Cacao - Putumayo,,17,1.42,2,5
+OLPL0104,Andiroba Oil - 10ml,,0,0,34,0
+OLPL0204,Buriti Oil - 10ml,,10,0.83,9,3
+OLPL0204-1,Açaí Oil - 10ml,,3,0.25,65,1
+OLPL0304,Copaiba Oil - 10ml,,10,0.83,0,3
+PPSE0100,"Purple Passionflower Extract - Passiflora Incarnata - MAYA, 10ml",,14,1.17,15,4
+PROD1171,Rapé Snuff Bottle,,0,0,0,0
+PROD531,"INÚ, Canto do filho da Onça - Xití Nukini",,0,0,0,0
+PRTP0100,Kuntanawa Rapé Container,Gray,0,0,2,0
+PRTP0101,Kuntanawa Rapé Container,Blue,0,0,0,0
+PRTP0102,Kuntanawa Rapé Container,Colorful,0,0,0,0
+PRTP0103,Kuntanawa Rapé Container,Red,2,0.17,1,1
+PRTP0104,Kuntanawa Rapé Container,Green,2,0.17,2,1
+PRTP0105,Kuntanawa Rapé Container,Yellow,0,0,0,0
+PRTP0106,Kuntanawa Rapé Container,Kuntanawa Rapé Container,0,0,0,0
+PRTP0200,Rapé Snuff Bottle - Small,Green,0,0,3,0
+PRTP0201,Rapé Snuff Bottle - Small,Gray,0,0,1,0
+PRTP0300,Rapé Snuff Bottle - Medium,Gray,2,0.17,13,1
+PRTP0301,Rapé Snuff Bottle - Medium,Green,2,0.17,2,1
+PRTP0400,Kuntanawa Rapé Container - Kenê,,3,0.25,11,1
+PSSE0100,"Sage Extracts - Palo Santo Essential Oil - Bursera graveolens from Ecuador, 10ml",,5,0.42,12,2
+RAAP0104,Apurinã Rapé - Awiry or Green Snuff,"0,35oz (10gr.)",65,5.42,0,17
+RAAP0105,Apurinã Rapé - Awiry or Green Snuff,"0,70oz (20gr.)",57,4.75,0,15
+RAAP0106,Apurinã Rapé - Awiry or Green Snuff,"1,7oz(50gr.)",84,7,9,21
+RAAP0109,Apurinã Rapé - Awiry or Green Snuff,"0,17oz (5gr.)",102,8.5,0,26
+RACO0104,Caboclo Rapé - Eucalipto,"0,35oz (10gr.)",38,3.17,0,10
+RACO0105,Caboclo Rapé - Eucalipto,"0,70oz (20gr.)",21,1.75,0,6
+RACO0106,Caboclo Rapé - Eucalipto,"1,7oz(50gr.)",13,1.08,0,4
+RACO0109,Caboclo Rapé - Eucalipto,"0,17oz (5gr.)",35,2.92,0,9
+RACO0504,Caboclo Rapé - Paricá,"0,35oz (10gr.)",161,13.42,0,41
+RACO0505,Caboclo Rapé - Paricá,"0,70oz (20gr.)",77,6.42,0,20
+RACO0506,Caboclo Rapé - Paricá,"1,7oz(50gr.)",43,3.58,0,11
+RACO0509,Caboclo Rapé - Paricá,"0,17oz (5gr.)",75,6.25,0,19
+RACO0604,Caboclo Rapé - Parica Xtra,"0,35oz (10gr.)",429,35.75,0,108
+RACO0605,Caboclo Rapé - Parica Xtra,"0,70oz (20gr.)",75,6.25,5,19
+RACO0606,Caboclo Rapé - Parica Xtra,"1,7oz(50gr.)",0,0,12,0
+RACO0609,Caboclo Rapé - Parica Xtra,"0,17oz (5gr.)",186,15.5,0,47
+RACO0704,Caboclo Rapé - Croa,"0,35oz (10gr.)",25,2.08,0,7
+RACO0705,Caboclo Rapé - Croa,"0,70oz (20gr.)",16,1.33,0,4
+RACO0706,Caboclo Rapé - Croa,"1,7oz(50gr.)",12,1,2,3
+RACO0709,Caboclo Rapé - Croa,"0,17oz (5gr.)",0,0,3,0
+RACO0804,Caboclo Rapé - Yuxibu,"0,35oz (10gr.)",46,3.83,0,12
+RACO0805,Caboclo Rapé - Yuxibu,"0,70oz (20gr.)",0,0,27,0
+RACO0806,Caboclo Rapé - Yuxibu,"1,7oz(50gr.)",12,1,3,3
+RACO0809,Caboclo Rapé - Yuxibu,"0,17oz (5gr.)",0,0,0,0
+RACO0904,Caboclo Rapé - Flor de Jaci,"0,35oz (10gr.)",0,0,5,0
+RACO0905,Caboclo Rapé - Flor de Jaci,"0,70oz (20gr.)",0,0,0,0
+RACO0906,Caboclo Rapé - Flor de Jaci,"1,7oz(50gr.)",28,2.33,0,7
+RACO0909,Caboclo Rapé - Flor de Jaci,"0,17oz (5gr.)",60,5,0,15
+RACO1104,Caboclo Rapé - Amazon Green,"0,35oz (10gr.)",100,8.33,0,25
+RACO1105,Caboclo Rapé - Amazon Green,"0,70oz (20gr.)",54,4.5,0,14
+RACO1106,Caboclo Rapé - Amazon Green,"1,7oz(50gr.)",7,0.58,0,2
+RACO1109,Caboclo Rapé - Amazon Green,"0,17oz (5gr.)",42,3.5,0,11
+RAGE0104,Caboclo Rapé - Gesileu Traditional,"0,35oz (10gr.)",18,1.5,19,5
+RAGE0105,Caboclo Rapé - Gesileu Traditional,"0,70oz (20gr.)",0,0,9,0
+RAGE0106,Caboclo Rapé - Gesileu Traditional,"1,7oz(50gr.)",12,1,0,3
+RAGE0109,Caboclo Rapé - Gesileu Traditional,"0,17oz (5gr.)",13,1.08,37,4
+RAGE0204,Caboclo Rapé - Gesileu,"0,35oz (10gr.)",56,4.67,0,14
+RAGE0205,Caboclo Rapé - Gesileu,"0,70oz (20gr.)",38,3.17,0,10
+RAGE0206,Caboclo Rapé - Gesileu,"1,7oz(50gr.)",13,1.08,0,4
+RAGE0209,Caboclo Rapé - Gesileu,"0,17oz (5gr.)",0,0,0,0
+RAHK0104,Huni Kuin Floresta Rapé,"0,35oz (10gr.)",54,4.5,0,14
+RAHK0105,Huni Kuin Floresta Rapé,"0,70oz (20gr.)",40,3.33,0,10
+RAHK0106,Huni Kuin Floresta Rapé,"1,7oz(50gr.)",36,3,5,9
+RAHK0109,Huni Kuin Floresta Rapé,"0,17oz (5gr.)",0,0,0,0
+RAHK0204,Huni Kuin Rapé - Cacau,"0,35oz (10gr.)",0,0,15,0
+RAHK0205,Huni Kuin Rapé - Cacau,"0,70oz (20gr.)",80,6.67,8,20
+RAHK0206,Huni Kuin Rapé - Cacau,"1,7oz(50gr.)",29,2.42,4,8
+RAHK0209,Huni Kuin Rapé - Cacau,"0,17oz (5gr.)",37,3.08,0,10
+RAHK0304,Huni Kuin Rapé - Canela de Velho,"0,35oz (10gr.)",105,8.75,72,27
+RAHK0305,Huni Kuin Rapé - Canela de Velho,"0,70oz (20gr.)",72,6,0,18
+RAHK0306,Huni Kuin Rapé - Canela de Velho,"1,7oz(50gr.)",10,0.83,5,3
+RAHK0309,Huni Kuin Rapé - Canela de Velho,"0,17oz (5gr.)",24,2,0,6
+RAHK0404,Huni Kuin Rapé - Capemba,"0,35oz (10gr.)",0,0,27,0
+RAHK0405,Huni Kuin Rapé - Capemba,"0,70oz (20gr.)",10,0.83,19,3
+RAHK0406,Huni Kuin Rapé - Capemba,"1,7oz(50gr.)",6,0.5,5,2
+RAHK0409,Huni Kuin Rapé - Capemba,"0,17oz (5gr.)",12,1,16,3
+RAHK0504,Huni Kuin Cumaru Rapé,"0,35oz (10gr.)",98,8.17,0,25
+RAHK0505,Huni Kuin Cumaru Rapé,"0,70oz (20gr.)",24,2,0,6
+RAHK0506,Huni Kuin Cumaru Rapé,"1,7oz(50gr.)",13,1.08,0,4
+RAHK0509,Huni Kuin Cumaru Rapé,"0,17oz (5gr.)",104,8.67,0,26
+RAHK0704,Huni Kuin Emburana Rapé,"0,35oz (10gr.)",0,0,0,0
+RAHK0705,Huni Kuin Emburana Rapé,"0,70oz (20gr.)",45,3.75,0,12
+RAHK0706,Huni Kuin Emburana Rapé,"1,7oz(50gr.)",31,2.58,0,8
+RAHK0709,Huni Kuin Emburana Rapé,"0,17oz (5gr.)",159,13.25,0,40
+RAHK0904,Huni Kuin Rapé - Murici,"0,35oz (10gr.)",40,3.33,1,10
+RAHK0905,Huni Kuin Rapé - Murici,"0,70oz (20gr.)",28,2.33,0,7
+RAHK0906,Huni Kuin Rapé - Murici,"1,7oz(50gr.)",0,0,5,0
+RAHK0909,Huni Kuin Rapé - Murici,"0,17oz (5gr.)",28,2.33,7,7
+RAHK1004,Huni Kuin Rapé - 7 Herbs,"0,35oz (10gr.)",54,4.5,0,14
+RAHK1005,Huni Kuin Rapé - 7 Herbs,"0,70oz (20gr.)",28,2.33,0,7
+RAHK1006,Huni Kuin Rapé - 7 Herbs,"1,7oz(50gr.)",0,0,6,0
+RAHK1009,Huni Kuin Rapé - 7 Herbs,"0,17oz (5gr.)",21,1.75,30,6
+RAHK1104,Huni Kuin Rapé - Xacapandaré,"0,35oz (10gr.)",0,0,0,0
+RAHK1105,Huni Kuin Rapé - Xacapandaré,"0,70oz (20gr.)",32,2.67,0,8
+RAHK1106,Huni Kuin Rapé - Xacapandaré,"1,7oz(50gr.)",4,0.33,3,1
+RAHK1109,Huni Kuin Rapé - Xacapandaré,"0,17oz (5gr.)",17,1.42,0,5
+RAHK1204,Huni Kuin Xipão Rapé,"0,35oz (10gr.)",28,2.33,17,7
+RAHK1205,Huni Kuin Xipão Rapé,"0,70oz (20gr.)",11,0.92,5,3
+RAHK1206,Huni Kuin Xipão Rapé,"1,7oz(50gr.)",0,0,3,0
+RAHK1209,Huni Kuin Xipão Rapé,"0,17oz (5gr.)",30,2.5,0,8
+RAHK1604,Huni Kuin Rapé - Tradition,"0,35oz (10gr.)",0,0,5,0
+RAHK1605,Huni Kuin Rapé - Tradition,"0,70oz (20gr.)",40,3.33,7,10
+RAHK1606,Huni Kuin Rapé - Tradition,"1,7oz(50gr.)",18,1.5,3,5
+RAHK1609,Huni Kuin Rapé - Tradition,"0,17oz (5gr.)",13,1.08,29,4
+RAHK1704,Huni Kuin Uxi Rapé,"0,35oz (10gr.)",0,0,82,0
+RAHK1705,Huni Kuin Uxi Rapé,"0,70oz (20gr.)",7,0.58,0,2
+RAHK1706,Huni Kuin Uxi Rapé,"1,7oz(50gr.)",0,0,0,0
+RAHK1709,Huni Kuin Uxi Rapé,"0,17oz (5gr.)",7,0.58,26,2
+RAHK1804,Huni Kuin Rapé - Ninawa Pai da Mata,"0,35oz (10gr.)",25,2.08,10,7
+RAHK1805,Huni Kuin Rapé - Ninawa Pai da Mata,"0,70oz (20gr.)",8,0.67,0,2
+RAHK1806,Huni Kuin Rapé - Ninawa Pai da Mata,"1,7oz(50gr.)",0,0,0,0
+RAHK1809,Huni Kuin Rapé - Ninawa Pai da Mata,"0,17oz (5gr.)",7,0.58,29,2
+RAKA0104,Katukina Rapé - Lady of the night,"0,35oz (10gr.)",37,3.08,0,10
+RAKA0105,Katukina Rapé - Lady of the night,"0,70oz (20gr.)",27,2.25,0,7
+RAKA0106,Katukina Rapé - Lady of the night,"1,7oz(50gr.)",16,1.33,1,4
+RAKA0109,Katukina Rapé - Lady of the night,"0,17oz (5gr.)",52,4.33,0,13
+RAKA0204,Katukina Rapé - Sacred Dreams,"0,35oz (10gr.)",0,0,0,0
+RAKA0205,Katukina Rapé - Sacred Dreams,"0,70oz (20gr.)",106,8.83,9,27
+RAKA0206,Katukina Rapé - Sacred Dreams,"1,7oz(50gr.)",19,1.58,2,5
+RAKA0209,Katukina Rapé - Sacred Dreams,"0,17oz (5gr.)",54,4.5,0,14
+RAKA0304,Katukina Blond Rapé,"0,35oz (10gr.)",18,1.5,32,5
+RAKA0305,Katukina Blond Rapé,"0,70oz (20gr.)",0,0,14,0
+RAKA0306,Katukina Blond Rapé,"1,7oz(50gr.)",2,0.17,7,1
+RAKA0309,Katukina Blond Rapé,"0,17oz (5gr.)",19,1.58,16,5
+RAKA0404,Katukina Rapé - Nisural,"0,35oz (10gr.)",54,4.5,12,14
+RAKA0405,Katukina Rapé - Nisural,"0,70oz (20gr.)",20,1.67,2,5
+RAKA0406,Katukina Rapé - Nisural,"1,7oz(50gr.)",0,0,7,0
+RAKA0409,Katukina Rapé - Nisural,"0,17oz (5gr.)",9,0.75,12,3
+RAKU0204,Kuntanawa Rapé - Força,"0,35oz (10gr.)",59,4.92,0,15
+RAKU0205,Kuntanawa Rapé - Força,"0,70oz (20gr.)",150,12.5,16,38
+RAKU0206,Kuntanawa Rapé - Força,"1,7oz(50gr.)",80,6.67,0,20
+RAKU0209,Kuntanawa Rapé - Força,"0,17oz (5gr.)",0,0,0,0
+RAKU0704,Kuntanawa Rapé - Jarina,"0,35oz (10gr.)",16,1.33,7,4
+RAKU0705,Kuntanawa Rapé - Jarina,"0,70oz (20gr.)",5,0.42,3,2
+RAKU0706,Kuntanawa Rapé - Jarina,"1,7oz(50gr.)",12,1,3,3
+RAKU0709,Kuntanawa Rapé - Jarina,"0,17oz (5gr.)",12,1,27,3
+RAKU0804,Kuntanawa Rapé - Jatoba,"0,35oz (10gr.)",78,6.5,0,20
+RAKU0805,Kuntanawa Rapé - Jatoba,"0,70oz (20gr.)",20,1.67,0,5
+RAKU0806,Kuntanawa Rapé - Jatoba,"1,7oz(50gr.)",10,0.83,0,3
+RAKU0809,Kuntanawa Rapé - Jatoba,"0,17oz (5gr.)",0,0,18,0
+RAKU1104,Kuntanawa Rapé - Nixpu,"0,35oz (10gr.)",16,1.33,0,4
+RAKU1105,Kuntanawa Rapé - Nixpu,"0,70oz (20gr.)",7,0.58,10,2
+RAKU1106,Kuntanawa Rapé - Nixpu,"1,7oz(50gr.)",0,0,2,0
+RAKU1109,Kuntanawa Rapé - Nixpu,"0,17oz (5gr.)",0,0,24,0
+RAKU1204,Kuntanawa Rapé - Samauma,"0,35oz (10gr.)",37,3.08,0,10
+RAKU1205,Kuntanawa Rapé - Samauma,"0,70oz (20gr.)",118,9.83,0,30
+RAKU1206,Kuntanawa Rapé - Samauma,"1,7oz(50gr.)",36,3,9,9
+RAKU1209,Kuntanawa Rapé - Samauma,"0,17oz (5gr.)",42,3.5,0,11
+RAKU1304,Kuntanawa Rapé - Sananga,"0,35oz (10gr.)",52,4.33,0,13
+RAKU1305,Kuntanawa Rapé - Sananga,"0,70oz (20gr.)",56,4.67,24,14
+RAKU1306,Kuntanawa Rapé - Sananga,"1,7oz(50gr.)",24,2,5,6
+RAKU1309,Kuntanawa Rapé - Sananga,"0,17oz (5gr.)",29,2.42,6,8
+RAKU1404-1,Kuntanawa Rapé - Sanixi,"0,35oz (10gr.)",0,0,14,0
+RAKU1405,Kuntanawa Rapé - Sanixi,"0,70oz (20gr.)",38,3.17,0,10
+RAKU1406,Kuntanawa Rapé - Sanixi,"1,7oz(50gr.)",9,0.75,0,3
+RAKU1409,Kuntanawa Rapé - Sanixi,"0,17oz (5gr.)",23,1.92,21,6
+RAKU1504,Kuntanawa Rapé - Heart of the Boa,"0,35oz (10gr.)",62,5.17,0,16
+RAKU1505,Kuntanawa Rapé - Heart of the Boa,"0,70oz (20gr.)",63,5.25,14,16
+RAKU1506,Kuntanawa Rapé - Heart of the Boa,"1,7oz(50gr.)",34,2.83,20,9
+RAKU1509,Kuntanawa Rapé - Heart of the Boa,"0,17oz (5gr.)",0,0,0,0
+RAKU1604,Kuntanawa Rapé - Yunu,"0,35oz (10gr.)",88,7.33,0,22
+RAKU1605,Kuntanawa Rapé - Yunu,"0,70oz (20gr.)",58,4.83,15,15
+RAKU1606,Kuntanawa Rapé - Yunu,"1,7oz(50gr.)",15,1.25,4,4
+RAKU1609,Kuntanawa Rapé - Yunu,"0,17oz (5gr.)",19,1.58,0,5
+RAKU2004,Kuntanawa Rapé - Samauma Flower,"0,35oz (10gr.)",33,2.75,0,9
+RAKU2005,Kuntanawa Rapé - Samauma Flower,"0,70oz (20gr.)",44,3.67,0,11
+RAKU2006,Kuntanawa Rapé - Samauma Flower,"1,7oz(50gr.)",12,1,0,3
+RAKU2009,Kuntanawa Rapé - Samauma Flower,"0,17oz (5gr.)",0,0,0,0
+RAKU2104,Kuntanawa Rapé - Bee Power,"0,35oz (10gr.)",166,13.83,0,42
+RAKU2105,Kuntanawa Rapé - Bee Power,"0,70oz (20gr.)",225,18.75,9,57
+RAKU2106,Kuntanawa Rapé - Bee Power,"1,7oz(50gr.)",0,0,0,0
+RAKU2109,Kuntanawa Rapé - Bee Power,"0,17oz (5gr.)",0,0,0,0
+RAKU2204,Kuntanawa Rapé - Yrů Kawá,"0,35oz (10gr.)",11,0.92,50,3
+RAKU2205,Kuntanawa Rapé - Yrů Kawá,"0,70oz (20gr.)",6,0.5,18,2
+RAKU2206,Kuntanawa Rapé - Yrů Kawá,"1,7oz(50gr.)",7,0.58,2,2
+RAKU2209,Kuntanawa Rapé - Yrů Kawá,"0,17oz (5gr.)",3,0.25,21,1
+RAKU2504,Kuntanawa Rapé - Chief Osmildo,"0,35oz (10gr.)",27,2.25,24,7
+RAKU2505,Kuntanawa Rapé - Chief Osmildo,"0,70oz (20gr.)",0,0,22,0
+RAKU2506,Kuntanawa Rapé - Chief Osmildo,"1,7oz(50gr.)",10,0.83,0,3
+RAKU2509,Kuntanawa Rapé - Chief Osmildo,"0,17oz (5gr.)",14,1.17,14,4
+RAKU2604,Kuntanawa Rapé - Cidoca,"0,35oz (10gr.)",26,2.17,63,7
+RAKU2605,Kuntanawa Rapé - Cidoca,"0,70oz (20gr.)",17,1.42,19,5
+RAKU2606,Kuntanawa Rapé - Cidoca,"1,7oz(50gr.)",0,0,0,0
+RAKU2609,Kuntanawa Rapé - Cidoca,"0,17oz (5gr.)",0,0,42,0
+RANU0104,Nukini Rapé - Mulata,"0,35oz (10gr.)",0,0,0,0
+RANU0105,Nukini Rapé - Mulata,"0,70oz (20gr.)",59,4.92,8,15
+RANU0106,Nukini Rapé - Mulata,"1,7oz(50gr.)",31,2.58,6,8
+RANU0109,Nukini Rapé - Mulata,"0,17oz (5gr.)",0,0,34,0
+RANU0204,Nukini Rapé - Cravinho,"0,35oz (10gr.)",31,2.58,0,8
+RANU0205,Nukini Rapé - Cravinho,"0,70oz (20gr.)",35,2.92,0,9
+RANU0206,Nukini Rapé - Cravinho,"1,7oz(50gr.)",0,0,0,0
+RANU0209,Nukini Rapé - Cravinho,"0,17oz (5gr.)",50,4.17,0,13
+RANU0304,Nukini Rapé - Piri Piri,"0,35oz (10gr.)",56,4.67,0,14
+RANU0305,Nukini Rapé - Piri Piri,"0,70oz (20gr.)",0,0,12,0
+RANU0306,Nukini Rapé - Piri Piri,"1,7oz(50gr.)",30,2.5,3,8
+RANU0309,Nukini Rapé - Piri Piri,"0,17oz (5gr.)",50,4.17,11,13
+RANU0404,Nukini Rapé - Fresh (Eucalyptus),"0,35oz (10gr.)",50,4.17,25,13
+RANU0405,Nukini Rapé - Fresh (Eucalyptus),"0,70oz (20gr.)",20,1.67,30,5
+RANU0406,Nukini Rapé - Fresh (Eucalyptus),"1,7oz(50gr.)",29,2.42,19,8
+RANU0409,Nukini Rapé - Fresh (Eucalyptus),"0,17oz (5gr.)",14,1.17,0,4
+RANU0504,Nukini Rapé - Aura Cleanse,"0,35oz (10gr.)",63,5.25,0,16
+RANU0505,Nukini Rapé - Aura Cleanse,"0,70oz (20gr.)",0,0,8,0
+RANU0506,Nukini Rapé - Aura Cleanse,"1,7oz(50gr.)",45,3.75,11,12
+RANU0509,Nukini Rapé - Aura Cleanse,"0,17oz (5gr.)",0,0,0,0
+RANU0604,Nukini Rapé - Onça,"0,35oz (10gr.)",231,19.25,0,58
+RANU0605,Nukini Rapé - Onça,"0,70oz (20gr.)",69,5.75,16,18
+RANU0606,Nukini Rapé - Onça,"1,7oz(50gr.)",82,6.83,3,21
+RANU0609,Nukini Rapé - Onça,"0,17oz (5gr.)",0,0,4,0
+RANU0704,Nukini Rapé - Pitaica,"0,35oz (10gr.)",0,0,85,0
+RANU0705,Nukini Rapé - Pitaica,"0,70oz (20gr.)",10,0.83,31,3
+RANU0706,Nukini Rapé - Pitaica,"1,7oz(50gr.)",2,0.17,4,1
+RANU0709,Nukini Rapé - Pitaica,"0,17oz (5gr.)",0,0,32,0
+RANU0804,Nukini Rapé – White Roses,"0,35oz (10gr.)",132,11,0,33
+RANU0805,Nukini Rapé – White Roses,"0,70oz (20gr.)",0,0,27,0
+RANU0806,Nukini Rapé – White Roses,"1,7oz(50gr.)",74,6.17,14,19
+RANU0809,Nukini Rapé – White Roses,"0,17oz (5gr.)",69,5.75,0,18
+RANU0904,Nukini Rapé - Sansara,"0,35oz (10gr.)",45,3.75,12,12
+RANU0905,Nukini Rapé - Sansara,"0,70oz (20gr.)",0,0,0,0
+RANU0906,Nukini Rapé - Sansara,"1,7oz(50gr.)",66,5.5,11,17
+RANU0909,Nukini Rapé - Sansara,"0,17oz (5gr.)",0,0,3,0
+RANU1004,Nukini Rapé - 7 Stars,"0,35oz (10gr.)",132,11,0,33
+RANU1005,Nukini Rapé - 7 Stars,"0,70oz (20gr.)",74,6.17,0,19
+RANU1006,Nukini Rapé - 7 Stars,"1,7oz(50gr.)",66,5.5,0,17
+RANU1009,Nukini Rapé - 7 Stars,"0,17oz (5gr.)",0,0,0,0
+RANU1104,Nukini Rapé - Elixir,"0,35oz (10gr.)",44,3.67,1,11
+RANU1105,Nukini Rapé - Elixir,"0,70oz (20gr.)",47,3.92,16,12
+RANU1106,Nukini Rapé - Elixir,"1,7oz(50gr.)",106,8.83,1,27
+RANU1109,Nukini Rapé - Elixir,"0,17oz (5gr.)",25,2.08,24,7
+RANU1704,Nukini Rapé - Forest Breeze,"0,35oz (10gr.)",23,1.92,12,6
+RANU1705,Nukini Rapé - Forest Breeze,"0,70oz (20gr.)",0,0,13,0
+RANU1706,Nukini Rapé - Forest Breeze,"1,7oz(50gr.)",1,0.08,9,1
+RANU1709,Nukini Rapé - Forest Breeze,"0,17oz (5gr.)",18,1.5,10,5
+RANU1804,Nukini Rapé - Rawny,"0,35oz (10gr.)",12,1,26,3
+RANU1805,Nukini Rapé - Rawny,"0,70oz (20gr.)",15,1.25,1,4
+RANU1806,Nukini Rapé - Rawny,"1,7oz(50gr.)",0,0,0,0
+RANU1809,Nukini Rapé - Rawny,"0,17oz (5gr.)",7,0.58,8,2
+RAPU0104,Puyanawa Rapé - Jagube,"0,35oz (10gr.)",72,6,0,18
+RAPU0105,Puyanawa Rapé - Jagube,"0,70oz (20gr.)",0,0,39,0
+RAPU0106,Puyanawa Rapé - Jagube,"1,7oz(50gr.)",0,0,8,0
+RAPU0109,Puyanawa Rapé - Jagube,"0,17oz (5gr.)",14,1.17,9,4
+RAPU0204,Puyanawa Rapé - Pixuri,"0,35oz (10gr.)",30,2.5,3,8
+RAPU0205,Puyanawa Rapé - Pixuri,"0,70oz (20gr.)",20,1.67,2,5
+RAPU0206,Puyanawa Rapé - Pixuri,"1,7oz(50gr.)",30,2.5,0,8
+RAPU0209,Puyanawa Rapé - Pixuri,"0,17oz (5gr.)",10,0.83,17,3
+RASC0103,Shamanic Snuff - Amazon,"0,35oz (10gr.)",18,1.5,20,5
+RASC0104,Shamanic Snuff - Amazon,"0,70oz (20gr.)",58,4.83,0,15
+RASC0105,Shamanic Snuff - Amazon,"1,7oz(50gr.)",0,0,0,0
+RASC0106,Shamanic Snuff - Amazon,"0,17oz (5gr.)",28,2.33,43,7
+RASC0203,Shamanic Snuff - Golden,"0,35oz (10gr.)",26,2.17,0,7
+RASC0204,Shamanic Snuff - Golden,"0,70oz (20gr.)",0,0,10,0
+RASC0205,Shamanic Snuff - Golden,"1,7oz(50gr.)",15,1.25,5,4
+RASC0206,Shamanic Snuff - Golden,"0,17oz (5gr.)",28,2.33,54,7
+RASC0303,Shamanic Snuff - Haux Haux,"0,35oz (10gr.)",0,0,5,0
+RASC0304,Shamanic Snuff - Haux Haux,"0,70oz (20gr.)",17,1.42,5,5
+RASC0305,Shamanic Snuff - Haux Haux,"1,7oz(50gr.)",13,1.08,1,4
+RASC0306,Shamanic Snuff - Haux Haux,"0,17oz (5gr.)",0,0,0,0
+RASC0403,Shamanic Snuff - Mint,"0,35oz (10gr.)",117,9.75,0,30
+RASC0404,Shamanic Snuff - Mint,"0,70oz (20gr.)",101,8.42,0,26
+RASC0405,Shamanic Snuff - Mint,"1,7oz(50gr.)",39,3.25,9,10
+RASC0406,Shamanic Snuff - Mint,"0,17oz (5gr.)",76,6.33,0,19
+RASC0503,Shamanic Snuff - Parica,"0,35oz (10gr.)",0,0,8,0
+RASC0504,Shamanic Snuff - Parica,"0,70oz (20gr.)",64,5.33,0,16
+RASC0505,Shamanic Snuff - Parica,"1,7oz(50gr.)",44,3.67,0,11
+RASC0506,Shamanic Snuff - Parica,"0,17oz (5gr.)",0,0,48,0
+RASC0603,Shamanic Snuff - Spiritual,"0,35oz (10gr.)",285,23.75,40,72
+RASC0604,Shamanic Snuff - Spiritual,"0,70oz (20gr.)",120,10,4,30
+RASC0605,Shamanic Snuff - Spiritual,"1,7oz(50gr.)",0,0,14,0
+RASC0606,Shamanic Snuff - Spiritual,"0,17oz (5gr.)",72,6,23,18
+RASC0703,Shamanic Snuff - Tonka,"0,35oz (10gr.)",0,0,5,0
+RASC0704,Shamanic Snuff - Tonka,"0,70oz (20gr.)",44,3.67,4,11
+RASC0705,Shamanic Snuff - Tonka,"1,7oz(50gr.)",21,1.75,0,6
+RASC0706,Shamanic Snuff - Tonka,"0,17oz (5gr.)",42,3.5,58,11
+RASC0803,Shamanic Snuff - Tsunu Extra,"0,35oz (10gr.)",0,0,0,0
+RASC0804,Shamanic Snuff - Tsunu Extra,"0,70oz (20gr.)",55,4.58,8,14
+RASC0805,Shamanic Snuff - Tsunu Extra,"1,7oz(50gr.)",27,2.25,0,7
+RASC0806,Shamanic Snuff - Tsunu Extra,"0,17oz (5gr.)",68,5.67,0,17
+RASC0903,Shamanic Snuff - Tsunu Native,"0,35oz (10gr.)",70,5.83,66,18
+RASC0904,Shamanic Snuff - Tsunu Native,"0,70oz (20gr.)",0,0,0,0
+RASC0905,Shamanic Snuff - Tsunu Native,"1,7oz(50gr.)",0,0,0,0
+RASC0906,Shamanic Snuff - Tsunu Native,"0,17oz (5gr.)",10,0.83,51,3
+RASC1003,Shamanic Snuff - Tsunu Strong,"0,35oz (10gr.)",0,0,0,0
+RASC1004,Shamanic Snuff - Tsunu Strong,"0,7oz (20gr.)",0,0,9,0
+RASC1005,Shamanic Snuff - Tsunu Strong,"1,7oz (50gr.)",37,3.08,0,10
+RASC1006,Shamanic Snuff - Tsunu Strong,"0,17oz (5gr.)",70,5.83,0,18
+RASC1203,Shamanic Snuff - Haux Haux Tobacco Free,"0,35oz (10gr.)",13,1.08,15,4
+RASC1204,Shamanic Snuff - Haux Haux Tobacco Free,"0,70oz (20gr.)",6,0.5,0,2
+RASC1205,Shamanic Snuff - Haux Haux Tobacco Free,"1,7oz(50gr.)",5,0.42,4,2
+RASC1206,Shamanic Snuff - Haux Haux Tobacco Free,"0,17oz (5gr.)",18,1.5,42,5
+RASC1303,Shamanic Snuff - Spiritual Tobacco Free,"0,35oz (10gr.)",8,0.67,26,2
+RASC1304,Shamanic Snuff - Spiritual Tobacco Free,"0,70oz (20gr.)",22,1.83,9,6
+RASC1305,Shamanic Snuff - Spiritual Tobacco Free,"1,7oz(50gr.)",2,0.17,9,1
+RASC1306,Shamanic Snuff - Spiritual Tobacco Free,"0,17oz (5gr.)",0,0,17,0
+RASC1403,Shamanic Snuff - Paricá Tobacco Free,"0,35oz (10gr.)",17,1.42,2,5
+RASC1404,Shamanic Snuff - Paricá Tobacco Free,"0,70oz (20gr.)",0,0,6,0
+RASC1405,Shamanic Snuff - Paricá Tobacco Free,"1,7oz(50gr.)",1,0.08,5,1
+RASC1406,Shamanic Snuff - Paricá Tobacco Free,"0,17oz (5gr.)",0,0,14,0
+RASC1503,Shamanic Snuff - Mint Tobacco Free,"0,35oz (10gr.)",10,0.83,19,3
+RASC1504,Shamanic Snuff - Mint Tobacco Free,"0,70oz (20gr.)",12,1,4,3
+RASC1505,Shamanic Snuff - Mint Tobacco Free,"1,7oz(50gr.)",3,0.25,9,1
+RASC1506,Shamanic Snuff - Mint Tobacco Free,"0,17oz (5gr.)",0,0,15,0
+RASC1603,Shamanic Snuff - Tonka Tobacco Free,"0,35oz (10gr.)",9,0.75,15,3
+RASC1604,Shamanic Snuff - Tonka Tobacco Free,"0,70oz (20gr.)",1,0.08,17,1
+RASC1605,Shamanic Snuff - Tonka Tobacco Free,"1,7oz(50gr.)",0,0,14,0
+RASC1606,Shamanic Snuff - Tonka Tobacco Free,"0,17oz (5gr.)",0,0,11,0
+RASC2804,Shamanic Snuff - Blue Lotus,"0,35oz (10gr.)",68,5.67,0,17
+RASC2805,Shamanic Snuff - Blue Lotus,"0,7oz (20gr.)",20,1.67,0,5
+RASC2806,Shamanic Snuff - Blue Lotus,"1,7oz (50gr.)",10,0.83,0,3
+RASC2809,Shamanic Snuff - Blue Lotus,"0,17oz (5gr.)",68,5.67,0,17
+RASC3104,Shamanic Snuff - Pure focus,"0,35oz (10gr.)",0,0,0,0
+RASC3105,Shamanic Snuff - Pure focus,"0,7oz (20gr.)",22,1.83,0,6
+RASC3106,Shamanic Snuff - Pure focus,"1,7oz (50gr.)",11,0.92,0,3
+RASC3109,Shamanic Snuff - Pure focus,"0,17oz (5gr.)",0,0,0,0
+RASD0104,Shawãdawa Hapé Medicine - Spiritual,"0,35oz (10gr.)",292,24.33,10,73
+RASD0105,Shawãdawa Hapé Medicine - Spiritual,"0,70oz (20gr.)",0,0,0,0
+RASD0106,Shawãdawa Hapé Medicine - Spiritual,"1,7oz(50gr.)",117,9.75,0,30
+RASD0109,Shawãdawa Hapé Medicine - Spiritual,5gr,96,8,0,24
+RASD0304,Shawãdawa Rapé - Putuvi,"0,35oz (10gr.)",23,1.92,55,6
+RASD0305,Shawãdawa Rapé - Putuvi,"0,70oz (20gr.)",32,2.67,0,8
+RASD0306,Shawãdawa Rapé - Putuvi,"1,7oz(50gr.)",9,0.75,0,3
+RASD0309,Shawãdawa Rapé - Putuvi,"0,17oz (5gr.)",0,0,0,0
+RASD0504,Shawãdawa Rapé - Power,"0,35oz (10gr.)",154,12.83,0,39
+RASD0505,Shawãdawa Rapé - Power,"0,70oz (20gr.)",77,6.42,0,20
+RASD0506,Shawãdawa Rapé - Power,"1,7oz(50gr.)",0,0,6,0
+RASD0509,Shawãdawa Rapé - Power,"0,17oz (5gr.)",55,4.58,0,14
+RASD0604,Shawãdawa Rapé - Rupusuti,"0,35oz (10gr.)",60,5,42,15
+RASD0605,Shawãdawa Rapé - Rupusuti,"0,70oz (20gr.)",0,0,0,0
+RASD0606,Shawãdawa Rapé - Rupusuti,"1,7oz(50gr.)",3,0.25,7,1
+RASD0609,Shawãdawa Rapé - Rupusuti,"0,17oz (5gr.)",10,0.83,18,3
+RASD0704,Shawãdawa Rapé - Relax,"0,35oz (10gr.)",0,0,2,0
+RASD0705,Shawãdawa Rapé - Relax,"0,70oz (20gr.)",30,2.5,0,8
+RASD0706,Shawãdawa Rapé - Relax,"1,7oz(50gr.)",12,1,0,3
+RASD0709,Shawãdawa Rapé - Relax,"0,17oz (5gr.)",20,1.67,4,5
+RASN0104,Shanenawa Rapé - Caneleiro,"0,35oz (10gr.)",39,3.25,0,10
+RASN0105,Shanenawa Rapé - Caneleiro,"0,70oz (20gr.)",57,4.75,15,15
+RASN0106,Shanenawa Rapé - Caneleiro,"1,7oz(50gr.)",20,1.67,0,5
+RASN0109,Shanenawa Rapé - Caneleiro,"0,17oz (5gr.)",0,0,0,0
+RAYA0104,Yawanawa Rapé - Sacred Village,"0,35oz (10gr.)",27,2.25,0,7
+RAYA0105,Yawanawa Rapé - Sacred Village,"0,70oz (20gr.)",13,1.08,10,4
+RAYA0106,Yawanawa Rapé - Sacred Village,"1,7oz(50gr.)",5,0.42,0,2
+RAYA0109,Yawanawa Rapé - Sacred Village,"0,17oz (5gr.)",32,2.67,0,8
+RAYA0204,Yawanawa Rapé - Força Feminina - Feminine Force,"0,35oz (10gr.)",0,0,0,0
+RAYA0205,Yawanawa Rapé - Força Feminina - Feminine Force,"0,70oz (20gr.)",174,14.5,0,44
+RAYA0206,Yawanawa Rapé - Força Feminina - Feminine Force,"1,7oz(50gr.)",106,8.83,0,27
+RAYA0209,Yawanawa Rapé - Força Feminina - Feminine Force,"0,17oz (5gr.)",0,0,0,0
+RAYA0404,Yawanawa Rapé - Kanarô,"0,35oz (10gr.)",16,1.33,10,4
+RAYA0405,Yawanawa Rapé - Kanarô,"0,70oz (20gr.)",18,1.5,10,5
+RAYA0406,Yawanawa Rapé - Kanarô,"1,7oz(50gr.)",6,0.5,3,2
+RAYA0409,Yawanawa Rapé - Kanarô,"0,17oz (5gr.)",18,1.5,27,5
+RAYA0504,Yawanawa Rapé - Mulateiro,"0,35oz (10gr.)",0,0,0,0
+RAYA0505,Yawanawa Rapé - Mulateiro,"0,70oz (20gr.)",0,0,0,0
+RAYA0506,Yawanawa Rapé - Mulateiro,"1,7oz(50gr.)",28,2.33,0,7
+RAYA0509,Yawanawa Rapé - Mulateiro,"0,17oz (5gr.)",0,0,0,0
+RAYA06,Yawanawa Rapé - Tsunu,"8,82oz(250gr)",0,0,0,0
+RAYA0604,Yawanawa Rapé - Tsunu,"0,35oz (10gr.)",136,11.33,0,34
+RAYA0605,Yawanawa Rapé - Tsunu,"0,70oz (20gr.)",0,0,27,0
+RAYA0606,Yawanawa Rapé - Tsunu,"1,7oz(50gr.)",54,4.5,8,14
+RAYA0609,Yawanawa Rapé - Tsunu,"0,17oz (5gr.)",0,0,0,0
+RAYA0704,Yawanawa Rapé - Chief,"0,35oz (10gr.)",49,4.08,0,13
+RAYA0705,Yawanawa Rapé - Chief,"0,70oz (20gr.)",10,0.83,0,3
+RAYA0706,Yawanawa Rapé - Chief,"1,7oz(50gr.)",0,0,0,0
+RAYA0709,Yawanawa Rapé - Chief,"0,17oz (5gr.)",0,0,0,0
+RAYA1004,Yawanawa Rapé - Pai Nani,"0,35oz (10gr.)",2,0.17,0,1
+RAYA1005,Yawanawa Rapé - Pai Nani,"0,70oz (20gr.)",11,0.92,0,3
+RAYA1006,Yawanawa Rapé - Pai Nani,"1,7oz(50gr.)",8,0.67,3,2
+RAYA1009,Yawanawa Rapé - Pai Nani,"0,17oz (5gr.)",0,0,0,0
+RAYA1204,Yawanawa Rapé - Runu,"0,35oz (10gr.)",120,10,2,30
+RAYA1205,Yawanawa Rapé - Runu,"0,70oz (20gr.)",54,4.5,0,14
+RAYA1206,Yawanawa Rapé - Runu,"1,7oz(50gr.)",18,1.5,0,5
+RAYA1209,Yawanawa Rapé - Runu,"0,17oz (5gr.)",40,3.33,3,10
+RHSE0100,Sage Extracts - Rhodiola Rosea,,3,0.25,6,1
+SACO0104,Sananga Caboclo - 10ml,,400,33.33,0,100
+SAKA0205,Sananga Root Bark,25gr,3,0.25,0,1
+SAKA0209,Sananga Root Bark,5gr,14,1.17,0,4
+SAKU0104,Sananga Kuntanawa - 10ml,,26,2.17,0,7
+SANU0104,Sananga Nukini - 10ml,,0,0,0,0
+SAPL0201-1,Fuerza Virilis - Natural Male Aphrodisiac - 100g,,18,1.5,68,5
+SAPL0201-2,Fuerza Venus - Natural Female Aphrodisiac - 100g,,0,0,0,0
+SAPL0900,Mulungu Tea - Natural Calming - 50g,,7,0.58,0,2
+SAPL2200,Guayusa Tea - 50gr,,6,0.5,0,2
+SASC0200,Sananga Advanced Tech - 10ml,Mild,0,0,14,0
+SASC0300,Sananga Advanced Tech - 10ml,Medium,0,0,3,0
+SASC0400,Sananga Advanced Tech - 10ml,Strong,65,5.42,4,17
+SCSC1805,Shamanic Snuff - Bashawa,"0,17oz (5gr.)",19,1.58,1,5
+SCSC1810,Shamanic Snuff - Bashawa,"0,35oz (10gr.)",27,2.25,23,7
+SCSC1820,Shamanic Snuff - Bashawa,"0,7oz (20gr.)",14,1.17,6,4
+SCSC1850,Shamanic Snuff - Bashawa,"1,7oz (50gr.)",0,0,0,0
+SCSC2305,Shamanic Snuff - Parica X-tra Strong,"0,17oz (5gr.)",40,3.33,0,10
+SCSC2310,Shamanic Snuff - Parica X-tra Strong,"0,35oz (10gr.)",50,4.17,0,13
+SCSC2320,Shamanic Snuff - Parica X-tra Strong,"0,7oz (20gr.)",20,1.67,0,5
+SCSC2350,Shamanic Snuff - Parica X-tra Strong,"1,7oz (50gr.)",10,0.83,0,3
+SCSC3205,Shamanic Snuff - Love Potion,"0,17oz (5gr.)",20,1.67,0,5
+SCSC3210,Shamanic Snuff - Love Potion,"0,35oz (10gr.)",50,4.17,0,13
+SCSC3220,Shamanic Snuff - Love Potion,"0,7oz (20gr.)",20,1.67,0,5
+SCSC3250,Shamanic Snuff - Love Potion,"1,7oz (50gr.)",10,0.83,0,3
+SCSC3505,Shamanic Snuff - High Energy,"0,17oz (5gr.)",20,1.67,0,5
+SCSC3510,Shamanic Snuff - High Energy,"0,35oz (10gr.)",0,0,0,0
+SCSC3520,Shamanic Snuff - High Energy,"0,7oz (20gr.)",20,1.67,0,5
+SCSC3550,Shamanic Snuff - High Energy,"1,7oz (50gr.)",20,1.67,0,5
+SCSC3905,Shamanic Snuff - Bobinsana,"0,17oz (5gr.)",20,1.67,0,5
+SCSC3910,Shamanic Snuff - Bobinsana,"0,35oz (10gr.)",10,0.83,0,3
+SCSC3920,Shamanic Snuff - Bobinsana,"0,7oz (20gr.)",20,1.67,0,5
+SCSC3950,Shamanic Snuff - Bobinsana,"1,7oz (50gr.)",20,1.67,5,5
+SESG0100,Sage Extracts - Siberian Ginseng,,4,0.33,25,1
+TAPE0100,Sacred Mapacho Tobacco from Peru,Whole,158,13.17,0,40
+TAPE0101,Sacred Mapacho Tobacco from Peru,Half,68,5.67,0,17
+TEAA01,Tepi - Leather,Brown,0,0,0,0
+TEAA0101,Tepi - Leather,White,0,0,2,0
+TEAA0102,Tepi - Leather,Black,4,0.33,2,1
+TEAA0200,Tepi - Double Leather Xtra Large,,1,0.08,4,1
+TESE0100,Tepi - Senna,,7,0.58,9,2
+TESM0100,Steel Tepi,,10,0.83,6,3
+TESM0200,Copper Tepi,,0,0,0,0
+TESM0300,Brass Tepi,,9,0.75,0,3
+TETA0202,Bone Tepi – Sacred Double Beads Tarauacá,,0,0,0,0
+TETA0400,Bone Tepi – Sacred Beads,Medium,0,0,0,0
+TETA0600,Bone Tepi – Sacred Beads,Large,8,0.67,2,2
+TETF0100,"Wood Tepi – Yuxibu, The Ancient Serpent",,0,0,0,0
+TETF0200,Wood Tepi – Guardian of the Forest,,0,0,0,0
+TETF0300,Tepi Sacred Flow,,2,0.17,3,1
+TETP0100,Tepi - Tete Pawã,Green,1,0.08,3,1
+TETP0101,Tepi - Tete Pawã,Red,0,0,0,0
+TETP0102,Tepi - Tete Pawã,Blue,0,0,3,0
+TETP0103,Tepi - Tete Pawã,Gray,4,0.33,2,1
+TETP0104,Tepi - Tete Pawã,Purple,0,0,0,0
+TETP0105,Tepi - Tete Pawã,Black,0,0,0,0
+TETP0106,Tepi - Tete Pawã,Colorful,0,0,0,0
+TETP0107,Tepi - Tete Pawã,Dark Green,0,0,0,0
+TETP0200,Tepi – Kenê,,1,0.08,0,1
+TETP0300,Tepi - Double Barrel Kenê,,5,0.42,5,2
+TETP0500,Tepi - Double Barrel,Double Barrel,0,0,0,0
+TETP0501,Tepi - Double Barrel,Red,0,0,0,0
+TETP0502,Tepi - Double Barrel,Green,2,0.17,3,1
+TETP0503,Tepi - Double Barrel,Light Green,0,0,0,0
+TETP0504,Tepi - Double Barrel,Grey,0,0,0,0
+TETP0505,Tepi - Double Barrel,Purple,0,0,0,0
+TETP0506,Tepi - Double Barrel,Colorful,0,0,0,0
+TETP0507,Tepi - Double Barrel,Yellow,0,0,0,0
+TETP1200,Kambo Power Tepi,,2,0.17,0,1
+TETP1300,Tribal Tete Pawa Tepi,,1,0.08,0,1
+TETP1400,Forest Power Tepi,,1,0.08,0,1

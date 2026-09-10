@@ -17,4 +17,4 @@ export function proxy(request: NextRequest) {
 }
 
 // Machine jobs validate their independent bearer token inside the route.
-export const config = { matcher: ['/', '/api/inventory', '/api/agent', '/api/rules', '/api/sync'] };
+export const config = { matcher: ['/', '/api/inventory', '/api/replenishment', '/api/agent', '/api/rules', '/api/sync'] };

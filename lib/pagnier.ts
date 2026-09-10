@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { isPagnierLabel } from './catalog-visibility';
 import { CATALOG_VERSION } from './catalog-policy';
 import { packaging } from './packaging';
 import { IntegrationError } from './woo';
@@ -32,6 +33,7 @@ export function parsePagnierRows(rows:unknown[][],columns:PagnierCursor['columns
   if(cell('Produto ativo?')!=='Sim'||cell('Setor de estoque ativo?')!=='Sim'||cell('Setor de estoque considera saldo disponível?')!=='Sim')continue;
   const sku=cell('Código do produto')?.trim(),name=cell('Descrição do produto')?.trim();
   if(!sku||!name)throw invalid();
+  if(isPagnierLabel(name))continue;
   const identity=[sku,cell('Revisão do produto'),cell('Código da empresa'),cell('Código do setor de estoque')].join('|');
   const id=Number.parseInt(createHash('sha256').update(identity).digest('hex').slice(0,12),16);
   const unit=cell('Unidade de medida abreviatura')?.trim().toUpperCase();

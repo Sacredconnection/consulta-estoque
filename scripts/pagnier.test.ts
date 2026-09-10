@@ -88,6 +88,7 @@ const sample:Record<string,string|null>={'Código do produto':'TSUNU','Revisão 
 const row=(overrides:Record<string,string|null>={})=>names.map(name=>[({...sample,...overrides})[name]]);
 
 test('Pagnier sums distinct available sectors, not repeated company balances, and is searchable',()=>{
+ assert.equal(parsePagnierRows([row({'Descrição do produto':'ETIQUETA Tsunu 250g'})],columns,'now').length,0);
  const products=parsePagnierRows([row(),row({'Código do setor de estoque':'11','Saldo em estoque do produto no setor':'8'}),row({'Setor de estoque considera saldo disponível?':'Não'})],columns,'now');
  assert.equal(products.length,2);const cells=buildStockRows(products);assert.equal(cells.length,1);
  assert.equal(cells[0].stores.pagnier?.quantity,12);assert.equal(cells[0].stores.pagnier?.kg,3);
