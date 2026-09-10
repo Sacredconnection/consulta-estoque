@@ -102,3 +102,13 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .stock-table .stock-group th{text-align:left;background:#f2f4e9;color:#53643b;font-size:12px;font-weight:600;text-transform:none;letter-spacing:.2px;padding:10px 12px;border-top:1px solid #d7dfc8;border-bottom:1px solid #d7dfc8}
 .stock-table tfoot th{font-size:11px}.stock-table tfoot td{padding:15px 12px}
 .table-note{font-size:11px;line-height:1.7;max-width:1100px}
+
+.company-filter{margin:20px 0 12px;padding:14px 16px;border:1px solid var(--border);border-radius:16px;background:#fffdf8}
+.company-filter legend{padding:0 6px;font-size:12px;font-weight:600;color:#52693e}
+.company-options{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.company-options label{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer}
+.company-options label:has(input:checked){background:#eef2e2;border-color:#a6b987}
+.company-options input{accent-color:var(--primary);width:16px;height:16px;margin:0}
+.company-options button{border:0;background:none;text-decoration:underline;text-underline-offset:3px;font-size:12px;color:var(--primary);padding:8px}
+.company-filter p,.query-companies{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.6}
+.company-filter:disabled{opacity:.65}.query-companies{margin-bottom:12px}
