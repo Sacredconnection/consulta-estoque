@@ -38,7 +38,7 @@ export function combineSacredChannels(records:Product[]):Product[]{
   const selected=x.quantity!==null?x:y;
   const other=selected===x?y:x;
   const weight=selected.grams==null&&!selected.shared&&selected.packaging!=='shared'&&!other.shared&&other.packaging!=='shared'&&(selected.quantityUnit??'un.')===(other.quantityUnit??'un.')?{grams:other.grams,packaging:other.packaging}:{};
-  others.push({...a,stocks:[{...selected,...weight,categories:[...new Set([...(x.categories??a.category.split(',')),...(y.categories??b.category.split(','))])],sourceChannel:'combined'}]});
+  others.push({...a,stocks:[{...selected,...weight,categoryPaths:[...(x.categoryPaths??(x.categories??a.category.split(',')).map(c=>[c])),...(y.categoryPaths??(y.categories??b.category.split(',')).map(c=>[c]))],categories:[...new Set([...(x.categories??a.category.split(',')),...(y.categories??b.category.split(','))])],sourceChannel:'combined'}]});
  }
  return others;
 }

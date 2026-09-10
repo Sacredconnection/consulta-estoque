@@ -1,5 +1,9 @@
 # Categorias e exportação
 
+Os filtros possuem dois níveis: Categoria pai e Subcategorias. A categoria pai inclui todos os seus descendentes, mesmo quando nenhum produto está atribuído diretamente a ela. Selecionar uma subcategoria refina aquele ramo, preservando as seleções de outros ramos. Níveis adicionais aparecem como caminhos completos, por exemplo `Rapé → Tribal → Yawanawa`. A mesma interface é usada na busca, no catálogo e na reposição.
+
+A hierarquia vem de `products/categories` do WooCommerce com `hide_empty=false`, incluindo os IDs dos pais. É guardada em cache persistente por 30 minutos, separada por empresa e canal. Uma falha preserva a última hierarquia válida e adia novas tentativas por 5 minutos. Os produtos antigos são enriquecidos pelo nome quando há correspondência única; as novas sincronizações também guardam os IDs das categorias. Os canais da Sacred continuam unidos sem somar estoques espelhados.
+
 O filtro é cumulativo: adicione várias categorias para incluir produtos de qualquer uma delas (união, sem duplicar produtos). Cada seleção pode ser removida individualmente; Limpar categorias volta a todas. Chat, catálogo, histórico e exportação preservam a mesma seleção.
 
 Com uma única empresa selecionada, o filtro de categorias aparece abaixo das empresas. As opções vêm do catálogo persistente daquela empresa; a seleção considera o nome completo da categoria e é aplicada antes da busca e do agrupamento de SKUs. Para catálogos antigos, as categorias são recuperadas de cada registro original antes de juntar as lojas. Varejo e atacado da Sacred formam uma empresa e disponibilizam suas categorias em conjunto.

@@ -1,3 +1,4 @@
+import {cachedCategoryTrees,applyCachedCategoryTrees} from './category-tree-cache';
 import { stockCategories } from './category-filter';
 import { combineSacredChannels } from './sacred-catalog';
 import {restoreCachedPackaging} from './packaging';
@@ -67,10 +68,10 @@ export async function getConnections(){
  });
 }
 export async function state(){
- const [connections,rule]=await Promise.all([getConnections(),getRule()]);
+ const [connections,rule,trees]=await Promise.all([getConnections(),getRule(),cachedCategoryTrees()]);
  const ids=connections.map(c=>c.id);
  const records=ids.length?await database().prepare("SELECT r.payload FROM records r INNER JOIN connections c ON r.store_id=c.id AND r.snapshot=c.snapshot WHERE r.store_id IN ("+ids.map(()=>"?").join(",")+")").bind(...ids).all<{payload:string}>():{results:[]};
- const products=scopeProductsToStores(mergeCatalog(combineSacredChannels(visibleCatalog(records.results.map(r=>withSourceCategories(JSON.parse(r.payload) as Product)).filter(p=>p.catalogVersion===CATALOG_VERSION)))),ids);
+ const products=scopeProductsToStores(mergeCatalog(combineSacredChannels(visibleCatalog(records.results.map(r=>applyCachedCategoryTrees(withSourceCategories(JSON.parse(r.payload) as Product),trees)).filter(p=>p.catalogVersion===CATALOG_VERSION)))),ids);
  return {demo:false,products,rule,connections,connectionSetup:connectionSetupIssues(process.env)};
 }
 

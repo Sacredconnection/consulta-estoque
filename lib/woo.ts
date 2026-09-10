@@ -2,7 +2,7 @@ import { signedWooUrl } from './woo-oauth';
 import { STORES, type Product, type StoreId, type Stock } from "./inventory";
 import { CATALOG_VERSION } from "./catalog-policy";
 import { packaging } from "./packaging";
-export type WooProduct={id:number;name?:string;sku?:string;type?:string;manage_stock?:boolean|"parent";stock_quantity?:number|null;stock_status?:string;categories?:{name:string}[];lang?:string;translations?:Record<string,number>;attributes?:{name?:string;slug?:string;option?:string;options?:string[]}[];variations?:number[]};
+export type WooProduct={id:number;parent?:number;name?:string;sku?:string;type?:string;manage_stock?:boolean|"parent";stock_quantity?:number|null;stock_status?:string;categories?:{id?:number;name:string}[];lang?:string;translations?:Record<string,number>;attributes?:{name?:string;slug?:string;option?:string;options?:string[]}[];variations?:number[]};
 export type Credentials={key:string;secret:string;siteUrl?:string;retail?:{siteUrl:string;key:string;secret:string}};
 export class IntegrationError extends Error {}
 export async function wooPage(storeId:StoreId,credentials:Credentials,path:string,params:Record<string,string>={},request:typeof fetch=fetch){
@@ -64,7 +64,7 @@ export function toRecord(storeId:StoreId,p:WooProduct,at:string,parent?:WooProdu
  const pool=!parent&&p.type==="variable"&&p.manage_stock===true;
  const sku=(p.sku??"").trim();
  const key=pool?"pool:"+storeId+":"+p.id:sku?"sku:"+sku:"id:"+storeId+":"+p.id;
- const stock:Stock={categories:(parent?.categories??p.categories??[]).map(c=>c.name),...packaging(p,parent),...(pool?{packaging:"shared" as const}:{}),parentId:parent?.id??p.id,productName:parent?.name??p.name??"Produto "+p.id,variationName:suffix,storeId,id:p.id,quantity,status:source.stock_status??"unknown",updatedAt:at,...(shared?{shared:true}:{})};
+ const stock:Stock={categoryIds:(parent?.categories??p.categories??[]).every(c=>c.id!==undefined)?(parent?.categories??p.categories??[]).map(c=>c.id!):undefined,categories:(parent?.categories??p.categories??[]).map(c=>c.name),...packaging(p,parent),...(pool?{packaging:"shared" as const}:{}),parentId:parent?.id??p.id,productName:parent?.name??p.name??"Produto "+p.id,variationName:suffix,storeId,id:p.id,quantity,status:source.stock_status??"unknown",updatedAt:at,...(shared?{shared:true}:{})};
  return {catalogVersion:CATALOG_VERSION,key,sku,name:name+(pool?" · estoque do produto pai":""),category:(parent?.categories??p.categories)?.map(c=>c.name).join(", ")||"Sem categoria",stocks:[stock]};
 }
 export async function readCatalog(storeId:StoreId,credentials:Credentials,at:string,request:typeof fetch=fetch){

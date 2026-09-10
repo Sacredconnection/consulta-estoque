@@ -8,7 +8,7 @@ export const STORES = [
 ] as const;
 export type StoreId = typeof STORES[number]["id"];
 export type WooStoreId = Exclude<StoreId, "pagnier">;
-export type Stock = { categories?:string[]; sourceChannel?:"wholesale"|"retail"|"combined"; quantityUnit?:string; location?:string; storeId: StoreId; id: number; quantity: number | null; status: string; updatedAt: string; shared?: boolean; parentId?:number; productName?:string; variationName?:string; grams?:number|null; packaging?:"can"|"bulk"|"other"|"shared" };
+export type Stock = { categoryIds?:number[];categoryPaths?:string[][]; categories?:string[]; sourceChannel?:"wholesale"|"retail"|"combined"; quantityUnit?:string; location?:string; storeId: StoreId; id: number; quantity: number | null; status: string; updatedAt: string; shared?: boolean; parentId?:number; productName?:string; variationName?:string; grams?:number|null; packaging?:"can"|"bulk"|"other"|"shared" };
 export type Product = { catalogVersion?:number; key: string; sku: string; name: string; category: string; stocks: Stock[] };
 export type Rule = { minimum: number; target: number; enabled: boolean; interval: number };
 export const DEFAULT_RULE: Rule = { minimum: 10, target: 40, enabled: true, interval: 30 };
