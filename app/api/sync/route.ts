@@ -8,7 +8,8 @@ export async function POST(request:Request){try{
  if(!input.action||input.action==="start"){
   if(input.force!==undefined&&typeof input.force!=="boolean")throw new ApiError(400,"Opção de atualização inválida.");
   if(input.storeId!==undefined&&!STORES.some(s=>s.id===input.storeId))throw new ApiError(400,"Fonte inválida.");
-  return json(await startSynchronization({force:input.force,storeId:input.storeId}));
+  if(input.scheduled!==undefined&&typeof input.scheduled!=="boolean")throw new ApiError(400,"Agendamento inválido.");
+  return json(await startSynchronization({force:input.force,storeId:input.storeId,scheduled:input.scheduled}));
  }
  if(input.action!=="step"||!STORES.some(s=>s.id===input.storeId)||typeof input.runId!=="string"||input.runId.length>80)throw new ApiError(400,"Etapa de sincronização inválida.");
  return json(await advanceSynchronization(input.storeId,input.runId));

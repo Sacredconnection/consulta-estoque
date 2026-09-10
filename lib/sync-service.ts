@@ -1,18 +1,19 @@
-import { database,configuredEnvironmentConnections,ensureEnvironmentConnections,getConnections,ApiError } from "./server";
+import { database,configuredEnvironmentConnections,ensureEnvironmentConnections,getConnections,getRule,ApiError } from "./server";
 import { initialCursor,advanceCatalog,type CatalogCursor } from "./sync-cursor";
 import { IntegrationError } from "./woo";
 import { CATALOG_VERSION } from "./catalog-policy";
 import type { StoreId } from "./inventory";
 import { advancePagnier } from "./pagnier";
-import { shouldStartSynchronization } from "./cache-policy";
+import { shouldStartSynchronization,scheduledRefreshDue } from "./cache-policy";
 type Job={store_id:StoreId;run_id:string;status:string;cursor:string;started_at:string;updated_at:string;error:string|null};
 const owned="EXISTS (SELECT 1 FROM connections WHERE id=? AND lock_token=?)";
-export async function startSynchronization(options:{force?:boolean;storeId?:StoreId}={}){
+export async function startSynchronization(options:{force?:boolean;storeId?:StoreId;scheduled?:boolean}={}){
  const configured=await ensureEnvironmentConnections();
  if(!configured.length)throw new ApiError(400,"Configure uma loja nas variáveis de ambiente do servidor antes de sincronizar.");
  const current=await getConnections();
- // Completed snapshots are persistent; elapsed time is not invalidation.
- const selected=current.filter(c=>(!options.storeId||c.id===options.storeId)&&shouldStartSynchronization(c,options.force));
+ const rule=options.scheduled?await getRule():null;
+ // Scheduled refresh replaces snapshots only after completion; normal reads keep the cache.
+ const selected=current.filter(c=>(!options.storeId||c.id===options.storeId)&&(rule?(rule.enabled&&scheduledRefreshDue(c,rule.interval)):shouldStartSynchronization(c,options.force)));
  if(!selected.length)return {connections:current,cached:!current.some(c=>c.sync?.status==="running"),message:current.some(c=>c.sync?.status==="running")?"Retomando somente as atualizações pendentes.":"Estoque carregado do cache persistente. Nenhuma alteração sinalizada pelas fontes."};
  const at=new Date().toISOString();
  await database().batch(selected.flatMap(c=>[

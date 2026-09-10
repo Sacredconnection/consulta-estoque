@@ -47,3 +47,4 @@ next-env.d.ts
 # Alternate local environment filename
 .local.nv
 env.local
+.env*.local

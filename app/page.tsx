@@ -50,7 +50,7 @@ export default function Home(){
  }
  useEffect(()=>{void load();return()=>syncAbort.current?.abort();},[]);
  useEffect(()=>{if(ready&&connections.some(c=>c.sync?.status==="running"||(c.needsSync&&!c.error)))void sync(true);},[ready]);
- useEffect(()=>{if(!ready||!rule.enabled||!connections.length)return;const timer=setInterval(()=>void sync(true),rule.interval*60000);return()=>clearInterval(timer);},[ready,rule.enabled,rule.interval,connections.length]);
+ useEffect(()=>{if(!ready||!rule.enabled||!connections.length)return;void sync(true,false,true);const timer=setInterval(()=>void sync(true,false,true),60000);return()=>clearInterval(timer);},[ready,rule.enabled,rule.interval,connections.length]);
  useEffect(()=>{if(messages.length)bottom.current?.scrollIntoView({block:"end"});},[messages,chatBusy]);
    useEffect(()=>{
     const context=(document as Document & {modelContext?:{registerTool:(tool:unknown,options:unknown)=>Promise<void>}}).modelContext;
@@ -71,7 +71,7 @@ export default function Home(){
  const visibleCatalogRows=filteredCatalogRows.slice(catalogStart,catalogStart+CATALOG_PAGE_SIZE);
  useEffect(()=>setCatalogPage(1),[catalogQuery,storeIds]);
 
-   async function sync(automatic=false,force=false){
+   async function sync(automatic=false,force=false,scheduled=false){
     if(syncRunning.current)return;
     if(!connections.length){if(!automatic)setNotice("Configure as credenciais de uma loja nas variáveis de ambiente do servidor antes de atualizar.");return;}
     syncRunning.current=true;setBusy(true);
@@ -82,7 +82,7 @@ export default function Home(){
       if(!r.ok)throw Error(d.error||"Não foi possível consultar esta etapa.");return d;
     }
     try{
-      const initial=await call({action:"start",force});let current=initial.connections;
+      const initial=await call({action:"start",force,scheduled});let current=initial.connections;
       setConnections(current);if(!automatic)setNotice(initial.message||"Atualização iniciada.");
       if(initial.cached){if(current.some(c=>loadedVersions.current[c.id]!==c.lastSync))await load();return;}
       let completed=current.filter(c=>c.sync?.status==="succeeded").length;

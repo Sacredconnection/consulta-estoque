@@ -11,7 +11,7 @@ export type WooStoreId = Exclude<StoreId, "pagnier">;
 export type Stock = { quantityUnit?:string; location?:string; storeId: StoreId; id: number; quantity: number | null; status: string; updatedAt: string; shared?: boolean; parentId?:number; productName?:string; variationName?:string; grams?:number|null; packaging?:"can"|"bulk"|"other"|"shared" };
 export type Product = { catalogVersion?:number; key: string; sku: string; name: string; category: string; stocks: Stock[] };
 export type Rule = { minimum: number; target: number; enabled: boolean; interval: number };
-export const DEFAULT_RULE: Rule = { minimum: 10, target: 40, enabled: true, interval: 5 };
+export const DEFAULT_RULE: Rule = { minimum: 10, target: 40, enabled: true, interval: 30 };
 const samples: [string,string,string,(number|null)[]][] = [
   ["RAP-TSU-10","Rapé Tsunu · 10 g","Rapés",[8,24,0]],
   ["RAP-HUN-10","Rapé Huni Kuin · 10 g","Rapés",[42,6,18]],

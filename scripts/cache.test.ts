@@ -6,9 +6,14 @@ import { getClient, getDatabase } from '../lib/database';
 import { startSynchronization } from '../lib/sync-service';
 import { getConnections } from '../lib/server';
 import { initialCursor } from '../lib/sync-cursor';
-import { shouldStartSynchronization } from '../lib/cache-policy';
+import { shouldStartSynchronization,scheduledRefreshDue } from '../lib/cache-policy';
 import { validStockNotification } from '../lib/stock-notifications';
 import { POST } from '../app/api/webhooks/stock/[storeId]/route';
+import { GET as cronSync } from '../app/api/jobs/sync/route';
+
+test('scheduled endpoint rejects requests without its independent cron credential',async()=>{
+ assert.equal((await cronSync(new Request('https://example.test/api/jobs/sync'))).status,401);
+});
 
 test('persistent cache survives repeated starts and invalidates only the changed source',async()=>{
  process.env.TURSO_DATABASE_URL='file::memory:';
@@ -47,6 +52,16 @@ test('persistent cache survives repeated starts and invalidates only the changed
   await db.prepare('UPDATE connections SET snapshot_revision=1 WHERE id=?').bind('pagnier').run();
   assert.equal((await getConnections()).find(c=>c.id==='pagnier')?.needsSync,true);
  }finally{getClient().close();delete process.env.TURSO_DATABASE_URL;delete process.env.WOO_MAYA_KEY;delete process.env.WOO_MAYA_SECRET;delete process.env.PAGNIER_CHANGE_TOKEN;}
+});
+
+test('scheduled refresh respects each source interval and never restarts running jobs',()=>{
+ const now=Date.parse('2026-09-10T15:00:00Z');
+ const source={catalogReady:true,needsSync:false,lastSync:'2026-09-10T14:30:00Z',sync:{status:'succeeded'}};
+ assert.equal(scheduledRefreshDue(source,30,now),true);
+ assert.equal(scheduledRefreshDue({...source,lastSync:'2026-09-10T14:31:00Z'},30,now),false);
+ assert.equal(scheduledRefreshDue({...source,sync:{status:'running'}},30,now),false);
+ assert.equal(scheduledRefreshDue({...source,lastSync:'invalid'},30,now),true);
+ assert.equal(shouldStartSynchronization(source),false);
 });
 
 test('cache policy preserves successful empty snapshots and resumes running jobs',()=>{

@@ -1,8 +1,8 @@
 const {SITE_ORIGIN,SITES_GATEWAY_TOKEN,SYNC_JOB_TOKEN}=process.env;
-if(!SITE_ORIGIN||!SITES_GATEWAY_TOKEN||!SYNC_JOB_TOKEN){console.error("Configure as variáveis do agendador no cofre de segredos.");process.exit(1);}
+if(!SITE_ORIGIN||!SYNC_JOB_TOKEN){console.error("Configure SITE_ORIGIN e SYNC_JOB_TOKEN no cofre de segredos.");process.exit(1);}
 const url=new URL("/api/jobs/sync",SITE_ORIGIN);if(url.protocol!=="https:")throw Error("Use HTTPS.");
 async function call(input){
- const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","OAI-Sites-Authorization":"Bearer "+SITES_GATEWAY_TOKEN,Authorization:"Bearer "+SYNC_JOB_TOKEN},body:JSON.stringify(input),redirect:"error",signal:AbortSignal.timeout(60000)});
+ const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",...(SITES_GATEWAY_TOKEN?{"OAI-Sites-Authorization":"Bearer "+SITES_GATEWAY_TOKEN}:{}),Authorization:"Bearer "+SYNC_JOB_TOKEN},body:JSON.stringify(input),redirect:"error",signal:AbortSignal.timeout(60000)});
  if(!r.ok)throw Error("HTTP "+r.status);return r.json();
 }
 try{

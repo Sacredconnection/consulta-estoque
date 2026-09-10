@@ -16,7 +16,7 @@ Para atualizar automaticamente quando houver mudança, configure webhooks nas lo
 
 Use um segredo exclusivo por loja, com o mesmo valor na Vercel e no webhook. Configure os eventos de criação, atualização, remoção e restauração de produtos; inclua os eventos de mudança de estoque de produtos e variações usados pela loja. O endpoint valida a assinatura HMAC-SHA256 antes de marcar o cache como alterado. O ping inicial sem assinatura apenas confirma conectividade e não altera dados.
 
-A notificação somente invalida o cache. A página aberta detecta a mudança no intervalo configurado e executa as etapas; se estiver fechada, elas começam na próxima abertura. O job externo já existente também pode processá-las. Não foi instalado um agendador nem configurado webhook nas contas das lojas automaticamente. Sem webhooks, use a atualização manual para buscar mudanças.
+A notificação somente invalida o cache. A página aberta e o cron da Vercel detectam fontes pendentes e executam as etapas. O agendamento também relê os estoques ao vencer o intervalo configurado, mesmo sem webhooks. Veja [Atualização periódica](stock-schedule.md) para a configuração de 30 minutos e autenticação do cron.
 
 ## Pagnier / Nomus
 
