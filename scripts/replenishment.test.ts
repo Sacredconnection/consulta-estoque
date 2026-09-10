@@ -38,4 +38,9 @@ test('replenishment categories accumulate without duplicating lines and preserve
  assert.equal(filterReplenishmentReport(report,['Ausente']).lines.length,0);
  assert.equal(filterReplenishmentReport(report,[]).lines.length,3);
  assert.equal(report.lines.length,3);
+ const searched=filterReplenishmentReport(report,['Ervas'],' b ');
+ assert.deepEqual(searched.lines.map(line=>line.sku),['B']);
+ assert.equal(searched.lines[0].order,null);
+ assert.equal(searched.search,'b');
+ assert.equal(filterReplenishmentReport(report,['Rapé'],'B').lines.length,0);
 });

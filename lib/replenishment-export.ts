@@ -5,7 +5,7 @@ const date=(s:string|null)=>s?new Date(s).toLocaleString('pt-BR',{timeZone:'Amer
 export async function exportReplenishment(report:ReplenishmentReport,format:'pdf'|'xlsx'){
  const order=report.lines.filter(r=>r.status==='order'),review=report.lines.filter(r=>r.status==='review');
  const company=report.storeName??'Sacred';
- const categoryNote=report.selectedCategories?.length?'Categorias: '+report.selectedCategories.join(' / '):'Todas as categorias';
+ const categoryNote=(report.selectedCategories?.length?'Categorias: '+report.selectedCategories.join(' / '):'Todas as categorias')+(report.search?' · Busca: '+report.search:'');
  const title='Pedido de reposição - '+company;
  const note=`Estoque: ${date(report.lastSync)} (Brasília). Gerado: ${date(report.generatedAt)}.${report.warning?' ATENÇÃO: atualização falhou; revisar estoque.':''}`;
  const total=order.reduce((sum,r)=>sum+r.order!,0),weight=order.reduce((sum,r)=>sum+(r.kg??0),0);

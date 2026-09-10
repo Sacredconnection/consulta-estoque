@@ -1,10 +1,11 @@
-import type {Product,Stock,StoreId} from './inventory';
+import {normalize,type Product,type Stock,type StoreId} from './inventory';
 import {categoryKeys,stockCategoryPaths} from './category-tree';
 export type SacredMinimum={sku:string;product:string;variation:string;minimum:number};
 export type ReplenishmentLine=SacredMinimum & {categories?:string[];current:number|null;order:number|null;kg:number|null;status:'order'|'ok'|'review';reason?:string};
-export type ReplenishmentReport={generatedAt:string;lastSync:string|null;source:string;lines:ReplenishmentLine[];warning?:string;storeId?:StoreId;storeName?:string;configured?:boolean;selectedCategories?:string[]};
-export function filterReplenishmentReport(report:ReplenishmentReport,categories:string[]):ReplenishmentReport{
- return {...report,selectedCategories:[...categories],lines:categories.length?report.lines.filter(line=>line.categories?.some(c=>categories.includes(c))):report.lines};
+export type ReplenishmentReport={generatedAt:string;lastSync:string|null;source:string;lines:ReplenishmentLine[];warning?:string;storeId?:StoreId;storeName?:string;configured?:boolean;selectedCategories?:string[];search?:string};
+export function filterReplenishmentReport(report:ReplenishmentReport,categories:string[],search=''):ReplenishmentReport{
+ const terms=normalize(search).trim().split(/\s+/).filter(Boolean);
+ return {...report,selectedCategories:[...categories],search:search.trim(),lines:report.lines.filter(line=>(!categories.length||line.categories?.some(c=>categories.includes(c)))&&terms.every(term=>normalize(line.sku+' '+line.product+' '+line.variation).includes(term)))};
 }
 export function sacredReplenishment(minima:SacredMinimum[],products:Product[],storeId:StoreId='sacred'):ReplenishmentLine[]{
  const index=new Map<string,Stock[]>();
