@@ -1,6 +1,8 @@
 # Sacred: varejo e atacado
 
-Erros de sincronização identificam o canal Varejo ou Atacado. No varejo, uma resposta 401 `woocommerce_rest_cannot_view` tenta uma única vez a autenticação por parâmetros HTTPS no mesmo endereço, alternativa documentada pelo WooCommerce para servidores que não encaminham Authorization. Redirecionamentos continuam bloqueados e erros não exibem URLs autenticadas nem credenciais.
+Errors identify the retail or wholesale channel. Retail retries anonymous 401 responses with WooCommerce OAuth 1.0a HMAC-SHA256. If WordPress reports a signature mismatch, the signature base is retried with the HTTP scheme used behind some HTTPS proxies. The actual request always stays on the configured HTTPS origin, redirects are blocked, and the consumer secret is never placed in the URL. Nonces and timestamps are regenerated for each request.
+
+Reference: https://github.com/woocommerce/woocommerce/blob/trunk/plugins/woocommerce/includes/class-wc-rest-authentication.php
 
 A Sacred aparece como uma empresa na consulta, nos filtros, nos totais e na reposição. O atacado mantém a configuração existente (`WOO_SACRED_KEY`/`WOO_SACRED_SECRET` ou o prefixo legado com URL).
 
