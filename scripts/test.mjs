@@ -1,7 +1,11 @@
 import { build } from "esbuild";
 import { mkdir } from "node:fs/promises";
+import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 await mkdir("work",{recursive:true});
-await build({entryPoints:["scripts/core.test.ts", "scripts/platform.test.ts", "scripts/pagnier.test.ts", "scripts/cache.test.ts"],outdir:"work",bundle:true,platform:"node",format:"esm",packages:"external",outExtension:{".js":".mjs"}});
-const result=spawnSync(process.execPath,["--test","work/core.test.mjs","work/platform.test.mjs","work/pagnier.test.mjs","work/cache.test.mjs"],{stdio:"inherit"});
+const suites=["core","platform","pagnier","cache","whatsapp"];
+for(const suite of suites){
+ await build({entryPoints:["scripts/"+suite+".test.ts"],outfile:"work/"+suite+".test.mjs",bundle:true,platform:"node",format:"esm",packages:"external",plugins:suite==="whatsapp"?[{name:"test-database",setup(build){build.onResolve({filter:/database$/},args=>resolve(args.resolveDir,args.path)+".ts"===resolve("lib/database.ts")?{path:resolve("scripts/test-database.ts")}:undefined);}}]:[]});
+}
+const result=spawnSync(process.execPath,["--test",...suites.map(s=>"work/"+s+".test.mjs"),"scripts/relay.test.mjs"],{stdio:"inherit"});
 process.exitCode=result.status??1;

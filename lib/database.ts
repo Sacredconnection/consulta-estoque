@@ -37,3 +37,5 @@ export function getDatabase() {
     },
   };
 }
+
+export type InventoryDatabase=ReturnType<typeof getDatabase>;

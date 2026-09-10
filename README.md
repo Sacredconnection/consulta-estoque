@@ -80,7 +80,7 @@ O estoque usa cache persistente no Turso e não expira por tempo. Abrir o site o
 - O botão retoma execuções interrompidas; progresso e erros aparecem junto ao chat.
 - Com a página aberta, alterações sinalizadas são processadas no intervalo configurado. Fechar a página preserva as etapas concluídas. Fontes com cache válido não são reiniciadas quando outra fonte precisa atualizar.
 - Não há agendador externo ativo. scripts/sync-job.mjs e POST /api/jobs/sync preparam essa integração, condicionada a autenticação de máquina e infraestrutura própria.
-- Não há envio de e-mails ou mensagens externas.
+- Não há envio de e-mails. Respostas por WhatsApp ficam disponíveis ao configurar e ativar o conector descrito abaixo.
 
 ## Validação
 
@@ -97,3 +97,6 @@ O estoque usa cache persistente no Turso e não expira por tempo. Abrir o site o
 - [Produtos](https://developer.woocommerce.com/docs/apis/rest-api/v3/products/)
 - [Variações](https://developer.woocommerce.com/docs/apis/rest-api/v3/product-variations/)
 - [Polylang: funções de idioma e traduções](https://polylang.pro/documentation/support/developers/function-reference/)
+
+## Bot de WhatsApp
+API autenticada de consulta e conector da Meta com webhook, fila e respostas formatadas. Configuração e limites em [docs/whatsapp.md](docs/whatsapp.md). O envio real permanece desativado até configurar o ambiente e disponibilizar o webhook por HTTPS.

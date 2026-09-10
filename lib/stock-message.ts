@@ -26,16 +26,17 @@ export function formatStockMessage(products:Product[],storeIds:readonly StoreId[
     for(const {product,stock} of rows){
      const q=stock.quantity,grams=stock.grams;
      const label=safe(stock.variationName||(grams?number(grams)+" g":product.sku||"Unidade"));
-     let entry="- "+label+": **"+(q===null?"quantidade não informada":number(q)+" un.")+"**";
+     let entry="- "+label+": **"+(q===null?"quantidade não informada":number(q)+" "+(stock.quantityUnit??"un."))+"**";
+     if(stock.location)entry+=" · "+safe(stock.location);
      if(stock.shared)entry+=" · saldo do produto pai; não somado";
      else if(kind==="shared")entry+=" · saldo único, sem distribuição entre variações";
      if(kind==="bulk"){
       productBulk++;
-      if(q!==null&&grams!=null){const kg=Math.max(0,q)*grams/1000;productKg+=kg;entry+=" × "+number(grams/1000)+" kg = **"+number(kg)+" kg**";}
+      if(q!==null&&grams!=null){const kg=Math.max(0,q)*grams/1000;productKg+=kg;entry+=stock.quantityUnit==="kg"||stock.quantityUnit==="g"?" · total: **"+number(kg)+" kg**":" × "+number(grams/1000)+" kg = **"+number(kg)+" kg**";}
       else {productExcluded++;entry+=" · kg não calculável";}
      }
      if(q!==null&&q<=0)entry+=" · esgotado";
-     if(rule&&q!==null&&!stock.shared&&kind!=="shared"&&q<=rule.minimum)entry+=" · reposição sugerida: "+number(Math.max(0,rule.target-Math.max(0,q)))+" un.";
+     if(rule&&q!==null&&!stock.shared&&kind!=="shared"&&q<=rule.minimum)entry+=" · reposição sugerida: "+number(Math.max(0,rule.target-Math.max(0,q)))+" "+(stock.quantityUnit??"un.");
      lines.push(entry);
     }
     lines.push("");

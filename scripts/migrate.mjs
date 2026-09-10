@@ -5,7 +5,7 @@ if (!process.env.TURSO_DATABASE_URL) throw new Error('Configure TURSO_DATABASE_U
 const client = createClient({ url: process.env.TURSO_DATABASE_URL, authToken: process.env.TURSO_AUTH_TOKEN });
 try {
   await client.execute('CREATE TABLE IF NOT EXISTS app_migrations (name TEXT PRIMARY KEY NOT NULL)');
-  for (const name of ['0000_free_cerebro.sql', '0001_puzzling_goliath.sql', '0002_persistent_cache.sql']) {
+  for (const name of ['0000_free_cerebro.sql', '0001_puzzling_goliath.sql', '0002_persistent_cache.sql', '0003_whatsapp_queue.sql']) {
     const tx = await client.transaction('write');
     try {
       const applied = await tx.execute({ sql: 'SELECT name FROM app_migrations WHERE name=?', args: [name] });

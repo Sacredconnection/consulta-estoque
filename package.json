@@ -13,7 +13,9 @@
     "format": "oxfmt",
     "db:generate": "drizzle-kit generate",
     "test": "node scripts/test.mjs",
-    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs"
+    "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "whatsapp:worker": "node scripts/whatsapp-worker.mjs",
+    "whatsapp:relay": "node scripts/whatsapp-relay.mjs"
   },
   "dependencies": {
     "react": "19.2.6",
