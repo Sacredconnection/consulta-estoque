@@ -14,6 +14,8 @@ O varejo usa as três variáveis de Production:
 
 As duas fontes são lidas no mesmo trabalho, com checkpoints persistentes. O catálogo anterior permanece disponível até ambas concluírem. Uma falha no varejo não publica um saldo parcial. IDs internos negativos distinguem os registros de varejo dos IDs do atacado; os SKUs originais são preservados.
 
-Saldos do mesmo SKU e apresentação são somados antes da consulta e do cálculo de reposição. Essa soma pressupõe saldos independentes entre os dois canais. Quantidade desconhecida em um canal mantém o total desconhecido. Duplicidades dentro de um canal, pesos incompatíveis e saldos compartilhados não são somados automaticamente. Produtos exclusivos de qualquer canal continuam pertencendo à Sacred. Os mínimos cadastrados permanecem exclusivos da Sacred.
+Varejo e atacado espelham o mesmo estoque do QuickBooks. Um SKU presente nos dois canais conta uma única vez na consulta, nos totais e na reposição: usa-se o saldo conhecido do atacado (inclusive zero e negativos), ou o varejo se o atacado não informar quantidade. Os saldos nunca são somados. Duplicidades dentro de um mesmo canal permanecem para conferência. Metadados ausentes de peso podem ser completados pelo outro canal quando a unidade é compatível. Produtos exclusivos de qualquer canal continuam pertencendo à Sacred. Os mínimos cadastrados permanecem exclusivos da Sacred.
+
+Apresentações como `0,35oz (10gr.)` usam o peso métrico explícito de 10 g. A leitura do cache recupera esse peso antes do agrupamento, sem exigir nova sincronização. A regra vale para todas as famílias e preserva apresentações diferentes.
 
 A inclusão ou troca da URL de varejo sinaliza uma nova sincronização; depois, vale o agendamento existente de 30 minutos.

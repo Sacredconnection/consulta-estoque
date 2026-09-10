@@ -12,3 +12,6 @@ O seletor abre em Sacred. Cada empresa usa exclusivamente seus SKUs, nomes e sal
 A aba calcula um pedido para revisão e exportação, sem enviá-lo a fornecedores. Recalcular lê o snapshot mais recente, sem forçar sincronização. As exportações usam o mesmo relatório exibido e registram a data do snapshot. Excel inclui Pedido, Revisar e Mínimos cadastrados; PDF inclui o pedido e um anexo de pendências. Pesos desconhecidos deixam o total de kg parcial.
 
 O filtro de empresas das consultas não modifica o seletor de reposição. Os mínimos importados do CSV continuam exclusivos Sacred. Produtos Pagnier cujo nome contém “etiqueta” (sem distinção de maiúsculas ou acentos) são excluídos na importação e na leitura do cache.
+# Filtros de categoria
+
+A reposição permite adicionar várias categorias da empresa selecionada. A seleção inclui produtos de qualquer uma delas, sem duplicar SKUs, e aplica-se ao pedido, aos itens para revisão, a todos os mínimos e aos totais. PDF e Excel usam o mesmo conjunto filtrado e identificam as categorias no arquivo. Remova seleções individualmente ou use Limpar categorias; trocar a empresa limpa o filtro. Recalcular preserva a seleção.

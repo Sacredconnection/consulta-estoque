@@ -27,3 +27,15 @@ test('Pagnier labels disappear from cached products without affecting other stor
  const p=make('A',1,'pagnier');p.name='ETIQUETA Rapé';p.stocks.push({...p.stocks[0],storeId:'sacred',productName:'Produto Sacred'});
  const visible=visibleCatalog([p,make('B',3,'pagnier')]);assert.equal(visible.length,2);assert.deepEqual(visible[0].stocks.map(s=>s.storeId),['sacred']);
 });
+import {filterReplenishmentReport,type ReplenishmentReport} from '../lib/replenishment';
+test('replenishment categories accumulate without duplicating lines and preserve review items',()=>{
+ const report:ReplenishmentReport={source:'test',lastSync:null,generatedAt:'now',lines:[
+  {sku:'A',product:'A',variation:'',minimum:10,current:2,order:8,kg:.08,status:'order',categories:['Rapé','Latas']},
+  {sku:'B',product:'B',variation:'',minimum:10,current:null,order:null,kg:null,status:'review',categories:['Ervas']},
+  {sku:'C',product:'C',variation:'',minimum:10,current:10,order:0,kg:0,status:'ok',categories:['Outros']},
+ ]};
+ assert.deepEqual(filterReplenishmentReport(report,['Rapé','Latas','Ervas']).lines.map(l=>l.sku),['A','B']);
+ assert.equal(filterReplenishmentReport(report,['Ausente']).lines.length,0);
+ assert.equal(filterReplenishmentReport(report,[]).lines.length,3);
+ assert.equal(report.lines.length,3);
+});

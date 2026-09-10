@@ -1,12 +1,21 @@
 import type { WooProduct } from "./woo";
-import type { Stock } from "./inventory";
+import type { Stock, Product } from "./inventory";
 
 export function netGrams(text:string):number|null {
  // A single explicit net mass only. Do not infer from SKU or shipping weight.
- const matches=[...text.toLowerCase().matchAll(/(?:^|[\s(·/])(\d+(?:[.,]\d+)?)\s*(kilograms?|kilogramas?|kgs?|grams?|gramas?|grs?|g)(?=$|[\s)/·])/g)];
+ const matches=[...text.toLowerCase().matchAll(/(?:^|[\s(·/])(\d+(?:[.,]\d+)?)\s*(kilograms?|kilogramas?|kgs?|grams?|gramas?|grs?|g)\.?(?=$|[\s)/·])/g)];
  if(matches.length!==1||/\d\s*[x×]|\b(pack|kit|set|caixa)\b/i.test(text))return null;
  const amount=Number(matches[0][1].replace(",","."))*(matches[0][2].startsWith("k")?1000:1);
  return Number.isFinite(amount)&&amount>0?amount:null;
+}
+// Older snapshots retain the original presentation. Recover explicit metric
+// weights before merging stores, without requiring a new upstream sync.
+export function restoreCachedPackaging(product:Product):Product{
+ return {...product,stocks:product.stocks.map(stock=>{
+  if(stock.storeId==='pagnier'||stock.grams!=null||stock.shared||stock.packaging==='shared')return stock;
+  const grams=netGrams(stock.variationName??'');
+  return grams===null?stock:{...stock,grams,packaging:([5,10,20,50].includes(grams)?'can':'bulk') as Stock['packaging']};
+ })};
 }
 export function packaging(p:WooProduct,parent?:WooProduct):Pick<Stock,"grams"|"packaging"> {
  const attributes=p.attributes??[];

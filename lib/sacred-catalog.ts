@@ -26,17 +26,19 @@ export function combineSacredChannels(records:Product[]):Product[]{
  const groups=new Map<string,Product[]>(),others:Product[]=[];
  for(const p of records){
   const s=p.stocks[0];
-  if(s?.storeId!=='sacred'||!p.sku.trim()||s.shared||s.packaging==='shared'){others.push(p);continue;}
+  if(s?.storeId!=='sacred'||!p.sku.trim()){others.push(p);continue;}
   const key=p.sku.trim().toUpperCase();groups.set(key,[...(groups.get(key)??[]),p]);
  }
  for(const group of groups.values()){
   const wholesale=group.filter(p=>p.stocks[0].sourceChannel!=='retail'),retail=group.filter(p=>p.stocks[0].sourceChannel==='retail');
   if(wholesale.length!==1||retail.length!==1){others.push(...group);continue;}
   const a=wholesale[0],b=retail[0],x=a.stocks[0],y=b.stocks[0];
-  // Mismatched presentation metadata remains ambiguous, never silently summed.
-  if((x.quantityUnit??'un.')!==(y.quantityUnit??'un.')||(x.grams??null)!==(y.grams??null)){others.push(...group);continue;}
-  const quantity=x.quantity===null||y.quantity===null?null:x.quantity+y.quantity;
-  others.push({...a,stocks:[{...x,categories:[...new Set([...(x.categories??a.category.split(',')),...(y.categories??b.category.split(','))])],quantity,status:quantity===null?'unknown':quantity>0?'instock':'outofstock',sourceChannel:'combined',updatedAt:x.updatedAt<y.updatedAt?x.updatedAt:y.updatedAt}]});
+  // Both channels mirror the same QuickBooks inventory. Never add balances.
+  // Wholesale is authoritative when known, including zero/negative values.
+  const selected=x.quantity!==null?x:y;
+  const other=selected===x?y:x;
+  const weight=selected.grams==null&&!selected.shared&&selected.packaging!=='shared'&&!other.shared&&other.packaging!=='shared'&&(selected.quantityUnit??'un.')===(other.quantityUnit??'un.')?{grams:other.grams,packaging:other.packaging}:{};
+  others.push({...a,stocks:[{...selected,...weight,categories:[...new Set([...(x.categories??a.category.split(',')),...(y.categories??b.category.split(','))])],sourceChannel:'combined'}]});
  }
  return others;
 }

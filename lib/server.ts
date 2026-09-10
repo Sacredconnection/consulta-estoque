@@ -1,5 +1,6 @@
 import { stockCategories } from './category-filter';
 import { combineSacredChannels } from './sacred-catalog';
+import {restoreCachedPackaging} from './packaging';
 import { getDatabase } from "./database";
 import { databaseErrorMessage } from "./database-errors";
 import { validAccess } from "./auth";
@@ -73,4 +74,4 @@ export async function state(){
  return {demo:false,products,rule,connections,connectionSetup:connectionSetupIssues(process.env)};
 }
 
-function withSourceCategories(p:Product):Product{return {...p,stocks:p.stocks.map(s=>({...s,categories:stockCategories(p,s)}))};}
+function withSourceCategories(p:Product):Product{return restoreCachedPackaging({...p,stocks:p.stocks.map(s=>({...s,categories:stockCategories(p,s)}))});}

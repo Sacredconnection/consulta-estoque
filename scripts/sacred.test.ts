@@ -11,6 +11,22 @@ import {startSynchronization,advanceSynchronization} from '../lib/sync-service';
 import {state} from '../lib/server';
 import {signedWooUrl} from '../lib/woo-oauth';
 import {createHmac} from 'node:crypto';
+import {netGrams,restoreCachedPackaging} from '../lib/packaging';
+import {buildStockRows} from '../lib/stock-table';
+
+test('retail metric abbreviations after ounces merge cached variants across all weights',()=>{
+ for(const [label,grams,suffix] of [['0,17oz (5gr.)',5,'09'],['0,35oz (10gr.)',10,'04'],['0,70oz (20gr.)',20,'05'],['1,7oz(50gr.)',50,'06']] as const){
+  assert.equal(netGrams(label),grams);
+  for(const family of ['RAAP01','RAYA02','RACO06']){
+   const wholesale=toRecord('sacred',{id:1,sku:family+suffix,name:'Product',manage_stock:true,stock_quantity:3,attributes:[{name:'Weight',option:grams+'g'}]},'now');
+   const retail=structuredClone(wholesale);retail.stocks[0]={...retail.stocks[0],id:-1,sourceChannel:'retail',grams:null,packaging:'other',variationName:label,quantity:4};
+   const maya=toRecord('maya',{id:2,sku:family+'-'+grams,name:'Product',manage_stock:true,stock_quantity:5,attributes:[{name:'Weight',option:grams+'g'}]},'now');
+   const rows=buildStockRows(mergeCatalog(combineSacredChannels([wholesale,restoreCachedPackaging(retail),maya])));
+   assert.equal(rows.length,1);assert.equal(rows[0].sku,family+'-'+grams);assert.equal(rows[0].stores.sacred!.quantity,3);assert.equal(rows[0].stores.maya!.quantity,5);
+  }
+ }
+ assert.equal(netGrams('10gr. / 50gr.'),null);assert.equal(netGrams('0,35oz'),null);assert.equal(netGrams('2 x 10gr.'),null);
+});
 
 test('Woo OAuth signs parameters with SHA256 and changes only signature base behind a proxy',async()=>{
  const url=new URL('https://retail.example/wp-json/wc/v3/products?per_page=1&search=For%C3%A7a');
@@ -71,22 +87,22 @@ test('Sacred checkpoints both sources and isolates overlapping Woo IDs',async()=
  assert.deepEqual(calls,['backend-wholesale.sacred-snuff.com','retail.example']);
  assert.equal(a.records[0].stocks[0].id,1);assert.equal(b.records[0].stocks[0].id,-1);
  const products=mergeCatalog(combineSacredChannels([...a.records,...b.records]));
- assert.equal(products.length,1);assert.equal(products[0].stocks[0].quantity,10);
+ assert.equal(products.length,1);assert.equal(products[0].stocks[0].quantity,6);
  const lines=sacredReplenishment([{sku:'SKU',product:'Product',variation:'',minimum:15}],products);
- assert.equal(lines[0].order,5);
+ assert.equal(lines[0].order,9);
  await assert.rejects(advanceSacred(credentials,{...a.cursor,sacredSources:'https://old.example'},request));
  await assert.rejects(advanceSacred(credentials,a.cursor,(async()=>{throw Error('offline');}) as typeof fetch));
 });
-test('aggregation preserves unknowns, source duplicates and mismatched weights for review',()=>{
+test('channel mirrors use one balance even with incomplete metadata; same-channel duplicates remain distinct',()=>{
  const a=toRecord('sacred',{id:1,sku:'SKU',name:'Product',manage_stock:true,stock_quantity:6},'2026-09-10');
  const b=structuredClone(a);b.stocks[0]={...b.stocks[0],id:-1,sourceChannel:'retail',quantity:null};
- assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,null);
+ assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,6);
  b.stocks[0].grams=10;
- assert.equal(combineSacredChannels([a,b]).length,2);
+ assert.equal(combineSacredChannels([a,b]).length,1);
  delete b.stocks[0].grams;
  assert.equal(combineSacredChannels([a,a,b]).length,3);
  b.stocks[0].shared=true;
- assert.equal(combineSacredChannels([a,b]).length,2);
+ assert.equal(combineSacredChannels([a,b]).length,1);
 });
 
 test('persistent Sacred snapshot publishes only after both channels complete and survives retail failure',async()=>{
@@ -107,17 +123,25 @@ test('persistent Sacred snapshot publishes only after both channels complete and
   await advanceSynchronization('sacred',run);
   assert.equal((await state()).products.length,0);
   await advanceSynchronization('sacred',run);
-  assert.equal((await state()).products[0].stocks[0].quantity,10);
+  assert.equal((await state()).products[0].stocks[0].quantity,6);
   assert.equal((await startSynchronization({storeId:'sacred'})).cached,true);
   const next=(await startSynchronization({storeId:'sacred',force:true})).connections.find(c=>c.id==='sacred')!.sync!.runId;
   await advanceSynchronization('sacred',next);failRetail=true;
   await advanceSynchronization('sacred',next);
   const saved=await state();
-  assert.equal(saved.products[0].stocks[0].quantity,10);
+  assert.equal(saved.products[0].stocks[0].quantity,6);
   assert.equal(saved.connections.find(c=>c.id==='sacred')!.sync!.status,'failed');
   process.env.SACRED_RETAIL_SITE_URL='https://new-retail.example';
   assert.equal((await state()).connections.find(c=>c.id==='sacred')!.needsSync,true);
   const replacement=await startSynchronization({storeId:'sacred'});
   assert.equal(replacement.connections.find(c=>c.id==='sacred')!.sync!.status,'running');
  }finally{globalThis.fetch=originalFetch;getClient().close();for(const key of Object.keys(vars))delete process.env[key];}
+});
+test('QuickBooks mirrors count once, preserve wholesale zero, and fall back to known retail',()=>{
+ const a=toRecord('sacred',{id:1,sku:'SKU',name:'Product',manage_stock:true,stock_quantity:9},'now');
+ const b=structuredClone(a);b.stocks[0]={...b.stocks[0],id:-1,sourceChannel:'retail'};
+ assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,9);
+ a.stocks[0].quantity=0;assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,0);
+ a.stocks[0].quantity=null;assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,9);
+ b.stocks[0].quantity=null;assert.equal(combineSacredChannels([a,b])[0].stocks[0].quantity,null);
 });
