@@ -112,3 +112,27 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .company-options button{border:0;background:none;text-decoration:underline;text-underline-offset:3px;font-size:12px;color:var(--primary);padding:8px}
 .company-filter p,.query-companies{font-size:11px;color:var(--muted);margin:10px 0 0;line-height:1.6}
 .company-filter:disabled{opacity:.65}.query-companies{margin-bottom:12px}
+
+/* A single starting point: choose companies, enter a product, consult. */
+.landing-main{max-width:1000px;padding-bottom:70px;padding-top:32px}
+.landing-main .view-tabs{margin-top:0}
+.search-welcome{padding-top:48px;padding-bottom:28px}
+.search-welcome::before{inset:20px -10px auto auto;width:220px;height:280px;opacity:.25}
+.search-welcome h1{font-size:clamp(30px,4vw,44px);line-height:1.2;letter-spacing:-1.2px;margin-bottom:15px}
+.search-welcome .eyebrow{margin-bottom:14px}
+.search-start{margin-top:28px;max-width:850px}
+.search-start .company-filter{background:transparent;border:0;border-radius:0;padding:0;margin:0 0 20px}
+.search-start .company-filter legend{padding:0;margin-bottom:10px}
+.search-start .company-filter p{margin-top:8px}
+.search-start .composer{max-width:none;align-items:center;padding:16px 18px;gap:14px;border:1px solid #a1b787;box-shadow:0 5px 20px #3947140b}
+.search-start .composer textarea{font-size:16px;min-height:28px}
+.search-start .composer>button{width:auto;height:46px;padding:0 18px;border-radius:15px;display:flex;align-items:center;gap:8px;font-size:13px}
+.search-example{display:flex;gap:10px 24px;flex-wrap:wrap;margin:13px 2px 0;color:#626d55;font-size:12px;line-height:1.7}
+.search-example code{font-family:var(--font-data),monospace;color:#405a2d;margin-right:5px}
+.sync-summary{margin:24px 0 14px;color:#626d55;font-size:12px;border-top:1px solid var(--border);padding-top:15px}
+.sync-summary summary{cursor:pointer;line-height:1.8}
+.sync-summary summary>span{margin-right:12px}.sync-details-label{font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.sync-summary .store-strip{padding:15px 0;border-bottom:0;gap:12px 24px}
+.sync-summary time{font-size:11px;color:#626d55}
+.sync-summary summary:focus-visible{outline:2px solid var(--ring);outline-offset:4px}
+@media(max-width:600px){.landing-main{padding-top:26px;padding-bottom:36px}.search-welcome{padding-top:30px}.search-welcome h1{font-size:30px;letter-spacing:-.8px}.search-welcome::before{width:140px;height:200px;opacity:.18}.search-start{margin-top:24px}.search-start .composer{padding:13px;flex-wrap:wrap;gap:12px}.search-start .composer textarea{flex-basis:100%;min-height:54px}.search-start .composer>button{width:100%;height:42px}.search-example{display:grid;gap:4px;font-size:11px}.sync-summary summary>span{display:block;margin-right:0}.company-options{gap:8px}.company-options label{padding:8px 10px}}
