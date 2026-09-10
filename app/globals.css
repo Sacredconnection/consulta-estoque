@@ -152,3 +152,6 @@ button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #6
 .stock-export{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-left:auto;min-height:40px;padding:8px 14px;border:1px solid #c9d1b8;border-radius:10px;background:#fff;color:#426020;font-size:13px;cursor:pointer}
 .stock-export:hover{background:#edf1e2}
 .stock-export:disabled{opacity:.6;cursor:wait}
+.category-chips{display:flex;gap:8px;flex-wrap:wrap}
+.category-chips button{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #a4b779;background:#edf2df;border-radius:18px;color:#385717;font-size:12px;text-align:left}
+.category-clear{align-self:flex-start;border:0;background:none;text-decoration:underline;font-size:12px;color:#526b31;padding:3px 0}

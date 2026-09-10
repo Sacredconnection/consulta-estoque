@@ -13,6 +13,17 @@ export async function wooPage(storeId:StoreId,credentials:Credentials,path:strin
  let response:Response;
  try{response=await request(url,{headers:{Authorization:"Basic "+btoa(credentials.key+":"+credentials.secret),Accept:"application/json"},redirect:"manual",signal:AbortSignal.timeout(20000)});}
  catch{throw new IntegrationError("A loja não respondeu em até 20 segundos. Verifique a disponibilidade da API.");}
+ // Some retail hosts discard Authorization before PHP. Retry only the same
+ // HTTPS origin with WooCommerce's documented query authentication, once.
+ if(storeId==='sacred'&&credentials.siteUrl&&response.status===401){
+  const detail=await response.clone().json().catch(()=>null) as {code?:string}|null;
+  if(detail?.code==='woocommerce_rest_cannot_view'){
+   const authenticated=new URL(url);authenticated.searchParams.set('consumer_key',credentials.key);authenticated.searchParams.set('consumer_secret',credentials.secret);
+   if(authenticated.protocol!=='https:')throw new IntegrationError('A autenticação alternativa exige HTTPS.');
+   try{response=await request(authenticated,{headers:{Accept:'application/json'},redirect:'manual',cache:'no-store',signal:AbortSignal.timeout(20000)});}
+   catch{throw new IntegrationError('O varejo não respondeu à autenticação alternativa. Verifique a disponibilidade da API.');}
+  }
+ }
  if(response.status>=300&&response.status<400)throw new IntegrationError("A API redirecionou a consulta. Verifique o endereço da loja; as credenciais não foram encaminhadas.");
  if(!response.ok){
   const detail=await response.json().catch(()=>null) as {code?:unknown;message?:unknown}|null;

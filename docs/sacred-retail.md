@@ -1,5 +1,7 @@
 # Sacred: varejo e atacado
 
+Erros de sincronização identificam o canal Varejo ou Atacado. No varejo, uma resposta 401 `woocommerce_rest_cannot_view` tenta uma única vez a autenticação por parâmetros HTTPS no mesmo endereço, alternativa documentada pelo WooCommerce para servidores que não encaminham Authorization. Redirecionamentos continuam bloqueados e erros não exibem URLs autenticadas nem credenciais.
+
 A Sacred aparece como uma empresa na consulta, nos filtros, nos totais e na reposição. O atacado mantém a configuração existente (`WOO_SACRED_KEY`/`WOO_SACRED_SECRET` ou o prefixo legado com URL).
 
 O varejo usa as três variáveis de Production:

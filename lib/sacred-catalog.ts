@@ -8,7 +8,10 @@ export async function advanceSacred(credentials:Credentials,previous:CatalogCurs
  const source=credentials.retail?.siteUrl??'';
  if(previous.sacredSources!==source)throw new IntegrationError('A configuração da Sacred mudou. Inicie uma nova sincronização.');
  const retail=previous.sacredPhase==='retail';
- const result=await advanceCatalog('sacred',retail?credentials.retail!:credentials,previous.sacredCursor??initialCursor(),request);
+ const result=await advanceCatalog('sacred',retail?credentials.retail!:credentials,previous.sacredCursor??initialCursor(),request).catch(error=>{
+  if(error instanceof IntegrationError)throw new IntegrationError((retail?'Varejo':'Atacado')+': '+error.message);
+  throw error;
+ });
  const records=result.records.map(p=>retail?{...p,key:p.key.startsWith('sku:')?p.key:p.key+':retail',stocks:p.stocks.map(s=>({...s,id:-s.id,parentId:s.parentId===undefined?undefined:-s.parentId,sourceChannel:'retail' as const}))}:{...p,stocks:p.stocks.map(s=>({...s,sourceChannel:'wholesale' as const}))});
  const offset=previous.sacredCompleted??0;
  const cursor:CatalogCursor={...previous,sacredCursor:result.cursor,productsDone:offset+result.cursor.productsDone,totalProducts:offset+result.cursor.totalProducts,records:previous.records+records.length};

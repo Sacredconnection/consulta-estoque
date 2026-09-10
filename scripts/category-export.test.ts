@@ -17,6 +17,9 @@ test('categories are scoped to source metadata and match whole category names',(
  assert.equal(result.length,1);assert.equal(result[0].stocks.length,1);assert.equal(result[0].stocks[0].storeId,'sacred');
  assert.equal(filterCategory(products,'maya','Rapé').length,0);
  assert.equal(filterCategory(products,'maya','Herb').length,0);
+ assert.equal(filterCategory(products,'maya',['Herbs','Other category']).length,2);
+ assert.equal(filterCategory(products,'maya',['Herbs','Tribal','Herbs']).length,1);
+ assert.equal(filterCategory(products,'maya',[]).length,2);
 });
 test('Excel retains numeric quantities, unknowns, totals and literal product strings',async()=>{
  const rows=buildStockRows(products),data=await stockWorkbook(rows,['maya'],'Categoria: Herbs');

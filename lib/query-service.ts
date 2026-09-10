@@ -9,8 +9,10 @@ export async function queryStock(message:unknown,storeIds?:unknown,category?:unk
  const s=await state();
  const selected=s.connections.filter(c=>storeIds===undefined||(storeIds as unknown[]).includes(c.id));
  if(storeIds!==undefined&&!selected.length)throw new ApiError(400,"Nenhuma empresa selecionada está configurada.");
- if(category!==undefined&&(typeof category!=='string'||!category.trim()||category.length>200||selected.length!==1||!Array.isArray(storeIds)||storeIds.length!==1))throw new ApiError(400,'Selecione apenas uma empresa para filtrar por categoria.');
- const products=typeof category==='string'?filterCategory(s.products,selected[0].id,category):s.products;
+ const categories=category===undefined?[]:Array.isArray(category)?category:[category];
+ if(categories.length>50||categories.some(c=>typeof c!=='string'||!c.trim()||c.length>200))throw new ApiError(400,'Informe até 50 categorias válidas.');
+ if(categories.length&&(selected.length!==1||!Array.isArray(storeIds)||storeIds.length!==1))throw new ApiError(400,'Selecione apenas uma empresa para filtrar por categoria.');
+ const products=categories.length?filterCategory(s.products,selected[0].id,categories):s.products;
  const answer=agentAnswer(products,s.rule,message,selected.map(c=>c.id));
  const warnings=selected.filter(c=>!c.connected||c.error||!c.lastSync||!c.catalogReady);
  const dates=selected.filter(c=>c.lastSync&&c.catalogReady).map(c=>STORES.find(x=>x.id===c.id)!.name+": "+new Date(c.lastSync!).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}));

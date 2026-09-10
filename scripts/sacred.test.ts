@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {environmentConnections,sacredRetailEnvironment} from '../lib/connections-env';
 import {advanceSacred,combineSacredChannels} from '../lib/sacred-catalog';
 import {initialCursor} from '../lib/sync-cursor';
-import {mergeCatalog,toRecord} from '../lib/woo';
+import {mergeCatalog,toRecord,wooPage} from '../lib/woo';
 import {sacredReplenishment} from '../lib/replenishment';
 import {getDatabase,getClient} from '../lib/database';
 import {readFile} from 'node:fs/promises';
@@ -12,6 +12,20 @@ import {state} from '../lib/server';
 
 const retail={siteUrl:'https://retail.example',key:'retail-key',secret:'retail-secret'};
 const credentials={key:'wholesale-key',secret:'wholesale-secret',retail};
+test('retail retries missing authentication only on the same HTTPS origin, with redacted failures',async()=>{
+ let count=0;
+ const request=(async(input,init)=>{
+  const url=new URL(String(input));assert.equal(url.origin,retail.siteUrl);assert.equal(init?.redirect,'manual');count++;
+  if(count===1)return Response.json({code:'woocommerce_rest_cannot_view'},{status:401});
+  assert.equal(url.searchParams.get('consumer_secret'),retail.secret);
+  assert.equal(url.searchParams.get('per_page'),'1');
+  return Response.json([{id:1}]);
+ }) as typeof fetch;
+ assert.equal((await wooPage('sacred',retail,'products',{per_page:'1'},request)).items.length,1);assert.equal(count,2);
+ count=0;
+ await assert.rejects(wooPage('sacred',retail,'products',{},(async()=>{count++;if(count===1)return Response.json({code:'woocommerce_rest_cannot_view'},{status:401});throw Error(retail.secret);}) as typeof fetch),error=>error instanceof Error&&!error.message.includes(retail.secret));
+ let forbidden=0;await assert.rejects(wooPage('sacred',retail,'products',{},(async()=>{forbidden++;return Response.json({code:'woocommerce_rest_cannot_view'},{status:403});}) as typeof fetch));assert.equal(forbidden,1);
+});
 test('retail variables attach to Sacred without creating another company',()=>{
  const values={WOO_SACRED_KEY:'key',WOO_SACRED_SECRET:'secret',SACRED_RETAIL_SITE_URL:retail.siteUrl,SACRED_RETAIL_CONSUMER_KEY:retail.key,SACRED_RETAIL_CONSUMER_SECRET:retail.secret};
  assert.deepEqual(environmentConnections(values),[{id:'sacred',key:'key',secret:'secret',retail}]);
