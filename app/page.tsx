@@ -4,8 +4,9 @@ import {CategoryFilter} from '@/components/category-filter';
 import Image from "next/image";
 import { availableCategories,filterCategory } from "@/lib/category-filter";
 import { Replenishment } from "@/components/replenishment";
+import { Tracking } from "@/components/tracking";
 import { useEffect, useMemo, useState, useRef } from "react";
-import { ArrowLeft, ArrowRight, ArrowUp, Check, CircleHelp, LoaderCircle, Network, RefreshCw, Search, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUp, Check, CircleHelp, LoaderCircle, Network, PackageSearch, RefreshCw, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StockTable } from "@/components/stock-table";
 import { QueryTurn } from "@/components/query-turn";
@@ -43,7 +44,7 @@ export default function Home(){
  const [message,setMessage]=useState(""),[messages,setMessages]=useState<Message[]>([]),[chatBusy,setChatBusy]=useState(false);
  const [expandedQueries,setExpandedQueries]=useState<number[]>([]);
  const latestQueryIndex=messages.reduce((last,m,index)=>m.role==="user"?index:last,-1);
- const [activeView,setActiveView]=useState<"assistant"|"catalog"|"replenishment">("assistant"),[catalogProducts,setCatalogProducts]=useState<Product[]>([]);
+ const [activeView,setActiveView]=useState<"assistant"|"catalog"|"replenishment"|"tracking">("assistant"),[catalogProducts,setCatalogProducts]=useState<Product[]>([]);
  const [catalogQuery,setCatalogQuery]=useState(""),[catalogPage,setCatalogPage]=useState(1);
  const syncRunning=useRef(false),syncAbort=useRef<AbortController|null>(null),bottom=useRef<HTMLDivElement>(null),input=useRef<HTMLTextAreaElement>(null);
  const loadedVersions=useRef<Record<string,string|null|undefined>>({});
@@ -144,8 +145,10 @@ export default function Home(){
    {notice&&<div className="notice" role="status"><CircleHelp size={17}/><span>{notice}</span><button onClick={()=>setNotice("")} aria-label="Fechar aviso"><X size={17}/></button></div>}
    {connectionSetup.map(issue=><div className="notice" role="status" key={issue.id}><CircleHelp size={17}/><span><strong>{STORES.find(s=>s.id===issue.id)!.name} · configuração incompleta:</strong> {issue.message}</span></div>)}
    {connections.filter(c=>c.error).map(c=><p className="connection-error" key={c.id} role="alert"><strong>{STORES.find(s=>s.id===c.id)!.name}:</strong> {c.error}</p>)}
-   {!isLanding&&activeView!=="replenishment"&&companyFilter}
+   {activeView==="tracking"&&<Tracking/>}
+   {!isLanding&&activeView!=="replenishment"&&activeView!=="tracking"&&companyFilter}
    <nav className="view-tabs" role="tablist" aria-label="Visualização do estoque">
+    <button id="tracking-tab" role="tab" aria-selected={activeView==="tracking"} aria-controls="tracking-panel" onClick={()=>setActiveView("tracking")}><PackageSearch size={16}/>Rastreio de pedidos</button>
     <button id="assistant-tab" role="tab" aria-selected={activeView==="assistant"} aria-controls="assistant-panel" onClick={()=>setActiveView("assistant")}><Network size={16}/>Consulta IA</button>
     <button id="catalog-tab" role="tab" aria-selected={activeView==="catalog"} aria-controls="catalog-panel" onClick={()=>setActiveView("catalog")}><Search size={16}/>Todos os dados</button>
     <button id="replenishment-tab" role="tab" aria-selected={activeView==="replenishment"} aria-controls="replenishment-panel" onClick={()=>setActiveView("replenishment")}>Reposição de Estoque</button>
