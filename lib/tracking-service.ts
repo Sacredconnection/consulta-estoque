@@ -1,6 +1,7 @@
 import {getDatabase} from './database';
 import {parseTrackingSheet,type Shipment} from './tracking-sheet';
 import {carrierReady,track,type TrackingResult} from './tracking-carriers';
+import {track17Configured,track17Batch,trackingKey,type Track17Outcome} from './tracking-17track';
 
 export type TrackedShipment=Shipment&{result:TrackingResult|null;error:string|null;attemptedAt:string|null};
 export type TrackingState={rows:TrackedShipment[];enabled:boolean;interval:number;importedAt:string|null;source:string;history:{id:string;at:string;status:string}[]};
@@ -33,20 +34,24 @@ export async function configureTracking(enabled:boolean,interval:number){
 export async function refreshTracking(manual=false,id?:string){
  return locked(async()=>{
   const state=await readTracking();if(!manual&&!state.enabled)return state;
-  const candidates=state.rows.filter(row=>!row.issue&&carrierReady(row.carrier)&&(id?row.id===id:!row.historical&&row.result?.status!=='Entregue')&&(manual||!row.attemptedAt||Date.parse(row.attemptedAt)+state.interval*60000<=Date.now()))
-   .sort((a,b)=>(a.attemptedAt??'').localeCompare(b.attemptedAt??'')).slice(0,5);
-  const results=new Map<string,{result:TrackingResult|null;error:string|null;attemptedAt:string}>();
-  for(const row of candidates){
-   const cacheKey=row.carrier+':'+row.tracking;
-   let update=results.get(cacheKey);
-   if(!update){
-    update={result:null,error:null,attemptedAt:new Date().toISOString()};
-    try{update.result=await track(row.carrier,row.tracking);}catch(error){update.error=error instanceof Error?error.message:'Falha na consulta.';}
-    results.set(cacheKey,update);
+  const unified=track17Configured();
+  const eligible=state.rows.filter(row=>!row.issue&&carrierReady(row.carrier)&&(id?row.id===id:!row.historical&&row.result?.status!=='Entregue')&&(manual||!row.attemptedAt||Date.parse(row.attemptedAt)+state.interval*60000<=Date.now()))
+   .sort((a,b)=>(a.attemptedAt??'').localeCompare(b.attemptedAt??''));
+  const seen=new Set<string>();
+  const candidates=eligible.filter(row=>{const key=trackingKey(row);if(seen.has(key))return false;seen.add(key);return true;}).slice(0,unified?120:5);
+  for(let start=0;start<candidates.length;start+=unified?40:1){
+   const batch=candidates.slice(start,start+(unified?40:1)),attemptedAt=new Date().toISOString();
+   let results:Map<string,Track17Outcome>;
+   if(unified)results=await track17Batch(batch);
+   else{
+    const row=batch[0];let result:TrackingResult|null=null,error:string|null=null;
+    try{result=await track(row.carrier,row.tracking);}catch(e){error=e instanceof Error?e.message:'Falha na consulta.';}
+    results=new Map([[trackingKey(row),{result,error}]]);
    }
-   // Preserve the last successful result if a carrier fails.
-   for(const target of state.rows.filter(r=>r.carrier===row.carrier&&r.tracking===row.tracking)){
-    target.attemptedAt=update.attemptedAt;target.error=update.error;
+   // One response updates duplicate codes; failures retain the last valid result.
+   for(const target of state.rows){
+    const update=results.get(trackingKey(target));if(!update)continue;
+    target.attemptedAt=attemptedAt;target.error=update.error;
     if(update.result){
      if(target.result?.status!==update.result.status)state.history.push({id:target.id,at:update.result.checkedAt,status:update.result.status});
      target.result=update.result;
@@ -59,5 +64,5 @@ export async function refreshTracking(manual=false,id?:string){
 }
 export async function trackingDashboard(){
  const state=await readTracking();
- return {...state,history:undefined,carriers:[...new Set(state.rows.map(r=>r.carrier))].map(name=>({name,ready:carrierReady(name)}))};
+ return {...state,history:undefined,integration:{provider:track17Configured()?'17TRACK':'direct',configured:track17Configured()},carriers:[...new Set(state.rows.map(r=>r.carrier))].map(name=>({name,ready:carrierReady(name)}))};
 }

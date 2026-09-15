@@ -1,5 +1,7 @@
-export type TrackingResult={status:string;description:string;expectedDelivery:string|null;checkedAt:string};
+import {track17Configured,track17Carrier,track17Batch,trackingKey} from './tracking-17track';
+export type TrackingResult={status:string;description:string;expectedDelivery:string|null;checkedAt:string;source?:string;eventAt?:string|null;carrierSyncedAt?:string|null;location?:string|null;expectedDeliveryFrom?:string|null;expectedDeliverySource?:string|null};
 export function carrierReady(carrier:string){
+ if(track17Configured()&&track17Carrier({carrier,tracking:''}))return true;
  if(carrier==='DHL')return !!process.env.DHL_TRACKING_API_KEY;
  if(carrier==='FedEx')return !!process.env.FEDEX_CLIENT_ID&&!!process.env.FEDEX_CLIENT_SECRET;
  if(carrier==='UPS')return !!process.env.UPS_CLIENT_ID&&!!process.env.UPS_CLIENT_SECRET;
@@ -40,6 +42,11 @@ async function token(carrier:'FedEx'|'UPS'){
  tokens.set(carrier,{value:data.access_token,until:Date.now()+Math.max(0,Number(data.expires_in||300)-60)*1000});return data.access_token as string;
 }
 export async function track(carrier:string,tracking:string):Promise<TrackingResult>{
+ if(track17Configured()&&track17Carrier({carrier,tracking})){
+  const row={carrier,tracking},outcome=(await track17Batch([row])).get(trackingKey(row));
+  if(!outcome?.result)throw Error(outcome?.error??'Aguardando a 17TRACK.');
+  return outcome.result;
+ }
  if(!carrierReady(carrier))throw Error(`Integração ${carrier} pendente de credenciais.`);
  let code='',description='',expectedDelivery:string|null=null;
  if(carrier==='DHL'){
