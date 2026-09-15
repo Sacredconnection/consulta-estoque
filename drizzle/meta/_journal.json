@@ -29,6 +29,13 @@
       "when": 1789052127827,
       "tag": "0003_whatsapp_queue",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789495237313,
+      "tag": "0004_tracking_history",
+      "breakpoints": true
     }
   ]
 }

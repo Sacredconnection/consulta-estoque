@@ -10,10 +10,12 @@ A planilha cadastra pedido, cliente, transportadora/AWB, coleta e status adminis
 - Transportadora vem do nome explícito; códigos UPS com prefixo 1Z também são reconhecidos. Números sem transportadora ficam para revisão.
 - Lê AWBs de redirecionamento como etapas separadas.
 - Coleta nos últimos 120 dias entra no monitoramento; cancelados, datas inválidas/ausentes e envios anteriores ficam no histórico. O histórico pode ser consultado individualmente.
-- Entregues confirmados pela API deixam a fila automática. A anotação "Entregue" na planilha não equivale à confirmação da API.
+- Pedidos marcados como **Entregue** no status da planilha ou na coluna Entregue (x/sim/data) ficam fora de todas as consultas, automáticas ou manuais, inclusive por ID. A regra também protege dados já importados com status textual, sem exigir reimportação. Códigos repetidos ficam bloqueados se qualquer cadastro os marcar como entregues.
+- "Não entregue" e "Saiu para entrega" não ativam essa exclusão. Em redirecionamentos, o status de entrega no hub pertence à primeira etapa, e o status da segunda fase é independente.
+- Entregues confirmados pela API deixam a fila automática. A informação da planilha continua identificada como tal, sem inventar uma confirmação da API. Registros excluídos de rastreio permanecem visíveis ao marcar "Incluir histórico, entregues e cancelados".
 - Erros preservam a última resposta válida, exibindo a falha separadamente.
 - Com 17TRACK, cada rodada consulta até 120 códigos únicos em até três lotes de 40. Sem 17TRACK, as APIs diretas consultam até cinco códigos por rodada. Priorizam-se os há mais tempo sem consulta; códigos repetidos usam o mesmo resultado. Volume e limites das APIs podem aumentar o intervalo efetivo.
-- Alterações de status ficam registradas no banco para uma futura integração de e-mail. Não há envio de mensagens implementado.
+- Toda tentativa de consulta fica registrada na tabela `tracking_history`, inclusive respostas sem mudança de status, alteração de previsão, processamento pendente e erros. Não há envio de e-mails implementado.
 
 ## Fonte
 
@@ -51,7 +53,22 @@ Documentação: https://api.17track.net/en/doc . Lista de canais: https://res.17
 
 `/api/tracking` usa a autenticação existente do aplicativo e valida origem nas alterações. `/api/jobs/tracking` exige Bearer CRON_SECRET. Vercel invoca a cada cinco minutos; o intervalo salvo (5/15/30/60) determina a elegibilidade de cada envio. Requer plano de hospedagem que suporte essa frequência.
 
-O banco existente recebe apenas as chaves `tracking-v1` e `tracking-lock` na tabela settings. Lease de 240 segundos impede importações e consultas concorrentes. Configuração inicia pausada.
+O banco guarda o estado atual em `settings` (`tracking-v1` e `tracking-lock`) e o histórico permanente em `tracking_history`. Lease de 240 segundos impede importações e consultas concorrentes. Configuração inicia pausada.
+
+## Histórico para consumo posterior
+
+A tabela é criada de forma idempotente na primeira operação de histórico/rastreio; a mesma estrutura também está na migração `0004_tracking_history.sql`. Os resumos antigos ainda disponíveis são migrados uma única vez; registros que a versão anterior já havia descartado não podem ser reconstruídos.
+
+- Sem descarte automático após 2.000 registros. Cada registro tem ID crescente, tipo, horário, pedido, cliente, tracking, transportadora e snapshot normalizado da resposta.
+- Eventos `consultation` incluem `data.response` (resposta nova ou null), `data.error`, `data.previousStatus`, provedor e snapshot do cadastro/cache. `changed` indica mudança de status; alterações de previsão também são preservadas mesmo sem mudança de status.
+- Não é armazenado o corpo bruto completo de todos os eventos da transportadora: a resposta normalizada contém status, descrição, previsão, origem, localização e horários disponíveis.
+- Estado atual e eventos da consulta são gravados na mesma transação. Falha ao salvar não publica um cache sem o histórico correspondente.
+- Eventos `baseline`, `legacy`, `import` e `removed` preservam cadastros, resumos antigos e reimportações. Remover um pedido da planilha não remove os seus eventos do banco.
+- No dashboard, o botão de histórico em cada envio abre os registros paginados.
+
+Endpoint autenticado: `GET /api/tracking/history`. Aceita filtros exatos `shipmentId`, `tracking`, `order`, além de `limit` (1–200, padrão 50) e `before` (cursor de ID). Retorna `{items, nextCursor}` em ordem decrescente de ID. Use `nextCursor` como `before` para consumir a próxima página, inclusive para pedidos já removidos do cadastro atual. Usa a mesma autenticação do aplicativo; não é uma API pública de clientes.
+
+Exemplo: `/api/tracking/history?tracking=123456789012&limit=50`.
 
 Para importar por CLI, compilar `scripts/tracking-import.mts` com esbuild e executar com as variáveis do banco. Adicionar `--dry-run` valida sem gravar ou conectar ao banco.
 

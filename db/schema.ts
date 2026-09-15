@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey, index } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, primaryKey, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 export const connections=sqliteTable("connections",{
  id:text("id").primaryKey(), credentials:text("credentials").notNull(),
  snapshot:text("snapshot"),lastSync:text("last_sync"),error:text("error"),
@@ -12,6 +12,13 @@ export const records=sqliteTable("records",{
  productId:integer("product_id").notNull(), payload:text("payload").notNull(),
 },t=>[primaryKey({columns:[t.snapshot,t.storeId,t.productId]}),index("idx_records_store_snapshot").on(t.storeId,t.snapshot)]);
 export const settings=sqliteTable("settings",{id:text("id").primaryKey(),payload:text("payload").notNull()});
+
+export const trackingHistory=sqliteTable('tracking_history',{
+ id:integer('id').primaryKey({autoIncrement:true}),eventKey:text('event_key').notNull(),
+ shipmentId:text('shipment_id').notNull(),orderRef:text('order_ref').notNull(),
+ tracking:text('tracking').notNull(),carrier:text('carrier').notNull(),recordedAt:text('recorded_at').notNull(),
+ kind:text('kind').notNull(),status:text('status'),statusChanged:integer('status_changed').notNull().default(0),payload:text('payload').notNull(),
+},t=>[uniqueIndex('idx_tracking_history_event').on(t.eventKey),index('idx_tracking_history_shipment').on(t.shipmentId,t.id),index('idx_tracking_history_tracking').on(t.tracking,t.id),index('idx_tracking_history_order').on(t.orderRef,t.id)]);
 
 export const syncJobs=sqliteTable("sync_jobs",{
  storeId:text("store_id").primaryKey(),runId:text("run_id").notNull(),

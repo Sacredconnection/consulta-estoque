@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import {DatabaseSync,type SQLInputValue} from 'node:sqlite';
 import {track17Batch,trackingKey,track17Carrier,parseTrack17Result} from '../lib/tracking-17track';
 import {carrierReady} from '../lib/tracking-carriers';
-import {refreshTracking,readTracking,type TrackingState,type TrackedShipment} from '../lib/tracking-service';
+import {refreshTracking,readTracking,trackingHistory,importTracking,type TrackingState,type TrackedShipment} from '../lib/tracking-service';
+import ExcelJS from 'exceljs';
+import {GET as historyRoute} from '../app/api/tracking/history/route';
 import {setTestDatabase} from './test-database';
 import type {InventoryDatabase} from '../lib/database';
 
@@ -68,12 +70,65 @@ function memory(state:TrackingState){
  function prepare(sql:string,args:SQLInputValue[]=[]){return {
   bind:(...values:SQLInputValue[])=>prepare(sql,values),
   first:async()=>sqlite.prepare(sql).get(...args)??null,
+  all:async()=>({results:sqlite.prepare(sql).all(...args)}),
   run:async()=>({meta:{changes:Number(sqlite.prepare(sql).run(...args).changes)}}),
  };}
- setTestDatabase({prepare} as unknown as InventoryDatabase);return sqlite;
+ const batch=async(statements:ReturnType<typeof prepare>[])=>{
+  sqlite.exec('BEGIN');try{const results=[];for(const statement of statements)results.push(await statement.run());sqlite.exec('COMMIT');return results;}catch(e){sqlite.exec('ROLLBACK');throw e;}
+ };
+ setTestDatabase({prepare,batch} as unknown as InventoryDatabase);return sqlite;
 }
 function shipment(index:number):TrackedShipment{return {id:String(index),sheet:'Setembro 2026',row:index+1,order:String(index),customer:'Test',carrier:'FedEx',tracking:String(100000000000+index),collected:'2026-09-10',orderStatus:'',historical:false,issue:null,result:null,error:null,attemptedAt:null};}
 const state=(rows:TrackedShipment[]):TrackingState=>({rows,enabled:true,interval:15,source:'test.xlsx',importedAt:null,history:[]});
+test('sheet-delivered rows and conflicting duplicate codes never contact providers, including manual by ID',async()=>{
+ const delivered={...shipment(1),orderStatus:'ENTREGUE - 14/09/2026'},duplicate={...shipment(1),id:'duplicate'},marked={...shipment(3),deliveredInSheet:true};
+ const sqlite=memory(state([delivered,duplicate,marked]));
+ try{await mockFetch(async()=>{assert.fail('Delivered rows must never be queried or registered');},async()=>{
+  await refreshTracking();await refreshTracking(true);await refreshTracking(true,delivered.id);await refreshTracking(true,duplicate.id);await refreshTracking(true,marked.id);
+  const history=await trackingHistory({shipmentId:delivered.id});assert.equal(history.items.length,1);assert.equal(history.items[0].kind,'baseline');
+  assert.equal((await readTracking()).rows[0].attemptedAt,null);
+ });}finally{sqlite.close();setTestDatabase(undefined);}
+});
+test('history retains unchanged responses and changed ETA; cache/history commit atomically',async()=>{
+ const row=shipment(1),sqlite=memory(state([row]));let count=0;
+ try{await mockFetch(async()=>{const data=info();data.time_metrics.estimated_delivery_date.to=count++?'2026-09-20':'2026-09-18';return response([{number:row.tracking,carrier:100003,track_info:data}]);},async()=>{
+  await refreshTracking(true);await refreshTracking(true);
+  const history=await trackingHistory({shipmentId:row.id});assert.equal(history.items.length,3);
+  assert.equal(history.items[0].data.response?.expectedDelivery,'2026-09-20');assert.equal(history.items[0].changed,false);
+  assert.equal(history.items[1].data.response?.expectedDelivery,'2026-09-18');assert.equal(history.items[1].changed,true);
+  const saved=await readTracking();
+  sqlite.exec("CREATE TRIGGER reject_history BEFORE INSERT ON tracking_history WHEN NEW.kind='consultation' BEGIN SELECT RAISE(ABORT,'test failure'); END;");
+  await assert.rejects(()=>refreshTracking(true),/test failure/);
+  assert.deepEqual(await readTracking(),saved);assert.equal((await trackingHistory({shipmentId:row.id})).items.length,3);
+ });}finally{sqlite.close();setTestDatabase(undefined);}
+});
+test('legacy history migrates idempotently beyond 2000 records with stable pagination',async()=>{
+ const initial=state([shipment(1)]);initial.history=Array.from({length:2005},(_,i)=>({id:'legacy-'+i,at:new Date(1700000000000+i*1000).toISOString(),status:'Em trânsito'}));
+ const sqlite=memory(initial);
+ try{
+  const page1=await trackingHistory({limit:200});assert.equal(page1.items.length,200);assert.ok(page1.nextCursor);
+  const page2=await trackingHistory({before:page1.nextCursor!,limit:200});assert.equal(page2.items.length,200);assert.ok(page2.items.every(x=>x.id<page1.nextCursor!));
+  assert.equal(sqlite.prepare('SELECT count(*) AS n FROM tracking_history').get()!.n,2006);
+  await trackingHistory();assert.equal(sqlite.prepare('SELECT count(*) AS n FROM tracking_history').get()!.n,2006);
+  assert.equal((await trackingHistory({shipmentId:'legacy-3'})).items[0].status,'Em trânsito');
+  assert.equal((await trackingHistory({tracking:"' OR 1=1 --"})).items.length,0);
+ }finally{sqlite.close();setTestDatabase(undefined);}
+});
+test('reimport preserves removed orders and records new sheet-delivered orders without tracking',async()=>{
+ const old=shipment(1),sqlite=memory(state([old]));
+ try{
+  const workbook=new ExcelJS.Workbook(),sheet=workbook.addWorksheet('Setembro 2026');
+  sheet.addRow(['Pedido','Cliente','Trasportadora - AWB','Data da Coleta','Status']);
+  sheet.addRow(['new-order','Test','FedEx - 999999999999',new Date('2026-09-10'),'Entregue']);
+  const imported=await importTracking(Buffer.from(await workbook.xlsx.writeBuffer()),'next.xlsx');
+  assert.equal(imported.rows.length,1);assert.equal(imported.rows[0].deliveredInSheet,true);
+  const oldEvents=(await trackingHistory({shipmentId:old.id})).items;assert.deepEqual(oldEvents.map(x=>x.kind),['removed','baseline']);assert.equal(oldEvents[0].data.shipment?.customer,'Test');
+  const newEvents=(await trackingHistory({order:'new-order'})).items;assert.equal(newEvents[0].kind,'import');
+ }finally{sqlite.close();setTestDatabase(undefined);}
+});
+test('history endpoint rejects unauthenticated requests without leaking stored data',async()=>{
+ assert.equal((await historyRoute(new Request('http://local/api/tracking/history'))).status,401);
+});
 test('scheduler processes 82 codes in 40/40/2 batches and respects saved interval',async()=>{
  const rows=Array.from({length:82},(_,i)=>shipment(i));rows.push({...rows[0],id:'duplicate'});
  const sqlite=memory(state(rows)),sizes:number[]=[];
@@ -83,7 +138,8 @@ test('scheduler processes 82 codes in 40/40/2 batches and respects saved interva
  },async()=>{
   const updated=await refreshTracking();assert.deepEqual(sizes,[40,40,2]);assert.equal(updated.rows.filter(r=>r.result).length,83);
   await refreshTracking();assert.deepEqual(sizes,[40,40,2]);
-  assert.equal((await readTracking()).history.length,83);
+  assert.equal((await readTracking()).history.length,0);
+  assert.equal(sqlite.prepare("SELECT count(*) AS n FROM tracking_history WHERE kind='consultation'").get()!.n,83);
  });}finally{sqlite.close();setTestDatabase(undefined);}
 });
 test('failed refresh preserves last successful result; delivered/history skip automatic registration',async()=>{
@@ -93,6 +149,8 @@ test('failed refresh preserves last successful result; delivered/history skip au
   requests++;assert.deepEqual(JSON.parse(String(init?.body)),[{number:active.tracking,carrier:100003}]);return new Response('',{status:503});
  },async()=>{
   const updated=await refreshTracking();assert.equal(requests,1);assert.deepEqual(updated.rows[2].result,active.result);assert.match(updated.rows[2].error!,/503/);
+  const history=(await trackingHistory({shipmentId:active.id})).items;
+  assert.equal(history[0].kind,'consultation');assert.equal(history[0].data.response,null);assert.match(history[0].data.error!,/503/);assert.deepEqual(history[0].data.shipment?.result,active.result);
   sqlite.prepare('UPDATE settings SET payload=? WHERE id=?').run(String(Date.now()+10000),'tracking-lock');
   await assert.rejects(()=>refreshTracking(true),/em andamento/);assert.equal(requests,1);
  });}finally{sqlite.close();setTestDatabase(undefined);}

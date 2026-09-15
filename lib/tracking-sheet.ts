@@ -1,7 +1,8 @@
 import ExcelJS from 'exceljs';
 import { createHash } from 'node:crypto';
+import {deliveredStatus} from './tracking-policy';
 
-export type Shipment = { id:string; sheet:string; row:number; order:string; customer:string; carrier:string; tracking:string; collected:string|null; orderStatus:string; historical:boolean; issue:string|null };
+export type Shipment = { id:string; sheet:string; row:number; order:string; customer:string; carrier:string; tracking:string; collected:string|null; orderStatus:string; deliveredInSheet?:boolean; historical:boolean; issue:string|null };
 export const normalize = (s:string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
 export function cellText(value:ExcelJS.CellValue):string {
  if(value===null||value===undefined)return '';
@@ -36,17 +37,19 @@ export async function parseTrackingSheet(bytes:Buffer,now=Date.now()):Promise<Sh
   for(let n=header+1;n<=sheet.rowCount;n++){
    const row=sheet.getRow(n),get=(c:number)=>c?cellText(row.getCell(c).value).trim():'';
    const order=get(orderCol),customer=get(customerCol);if(!order||!customer)continue;
-   const collected=get(dateCol)||null,orderStatus=get(statusCol);
-   const historical=!collected||!/^\d{4}-\d{2}-\d{2}$/.test(collected)||Date.parse(collected)<now-120*86400000||/cancelad/.test(normalize(orderStatus));
-   const legs=[{raw:get(awbCol),leg:'original'}];
-   const forward=index(/awb redirecionamento/);if(forward&&get(forward))legs.push({raw:get(forward),leg:'redirecionamento'});
+   const collected=get(dateCol)||null,orderStatus=get(statusCol)||get(index(/^data de entrega no hub$/));
+   const mark=get(index(/^entregue$/));
+   const markedDelivered=/^(x|sim|yes|true|1)$/i.test(mark)||/^\d{4}-\d{2}-\d{2}$/.test(mark)||deliveredStatus(mark);
+   const legs=[{raw:get(awbCol),leg:'original',collected,orderStatus,markedDelivered}];
+   const forward=index(/awb redirecionamento/);if(forward&&get(forward))legs.push({raw:get(forward),leg:'redirecionamento',collected:get(index(/^data de redirecionamento$/))||null,orderStatus:get(index(/^status 2/)),markedDelivered:false});
    for(const leg of legs){
+    const historical=!leg.collected||!/^\d{4}-\d{2}-\d{2}$/.test(leg.collected)||Date.parse(leg.collected)<now-120*86400000||/cancelad/.test(normalize(leg.orderStatus));
     const parsed=codes(leg.raw);
     for(const entry of parsed.length?parsed:[{carrier:'Não identificada',tracking:''}]){
      const key=[sheet.name,order,customer,leg.leg,entry.carrier,entry.tracking].join('|');
      const id=createHash('sha256').update(key).digest('hex').slice(0,32);
      if(shipments.some(s=>s.id===id))continue;
-     shipments.push({id,sheet:sheet.name,row:n,order,customer,...entry,collected,orderStatus,historical,issue:!entry.tracking?'Tracking ausente ou formato não reconhecido':entry.carrier==='Não identificada'?'Transportadora não identificada':null});
+     shipments.push({id,sheet:sheet.name,row:n,order,customer,...entry,collected:leg.collected,orderStatus:leg.orderStatus,deliveredInSheet:leg.markedDelivered||deliveredStatus(leg.orderStatus),historical,issue:!entry.tracking?'Tracking ausente ou formato não reconhecido':entry.carrier==='Não identificada'?'Transportadora não identificada':null});
     }
    }
   }
