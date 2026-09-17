@@ -22,7 +22,7 @@ export async function refreshCategoryTrees(){
  const db=getDatabase(),cached=await cachedCategoryTrees(),now=Date.now();
  const sources=environmentConnections(process.env).flatMap(c=>[
   {id:c.id+':wholesale',storeId:c.id,credentials:c,url:'https://'+STORES.find(s=>s.id===c.id)!.host},
-  ...(c.id==='sacred'&&c.retail?[{id:'sacred:retail',storeId:c.id,credentials:c.retail,url:c.retail.siteUrl}]:[]),
+  ...(c.retail?[{id:c.id+':retail',storeId:c.id,credentials:c.retail,url:c.retail.siteUrl}]:[]),
  ]);
  await Promise.all(sources.map(async source=>{
   const previous=cached.find(c=>c.id===source.id&&c.url===source.url);

@@ -58,7 +58,7 @@ export async function getConnections(){
  return STORES.filter(s=>configured.some(c=>c.id===s.id)).map(s=>{
   const c=rows.results.find(r=>r.id===s.id),job=jobs.results.find(j=>j.store_id===s.id);
   const cursor=job?JSON.parse(job.cursor) as {sacredSources?:string;catalogVersion?:number;productsDone:number;totalProducts:number;records:number}:null;
-  const incompatible=cursor?.catalogVersion!==CATALOG_VERSION||(s.id==="sacred"&&cursor?.sacredSources!==(configured.find(x=>x.id==="sacred")?.retail?.siteUrl??""));
+  const incompatible=cursor?.catalogVersion!==CATALOG_VERSION||((s.id==="sacred"||s.id==="maya")&&(cursor?.sacredSources??'')!==(configured.find(x=>x.id===s.id)?.retail?.siteUrl??""));
   const catalogReady=c?.catalog_version===CATALOG_VERSION||(!incompatible&&job?.status==="succeeded");
   const sourceRevision=c?.source_revision??0;
   const needsSync=incompatible||!catalogReady||sourceRevision>(c?.snapshot_revision??0);

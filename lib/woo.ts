@@ -7,7 +7,7 @@ export type Credentials={key:string;secret:string;siteUrl?:string;retail?:{siteU
 export class IntegrationError extends Error {}
 export async function wooPage(storeId:StoreId,credentials:Credentials,path:string,params:Record<string,string>={},request:typeof fetch=fetch){
  const store=STORES.find(s=>s.id===storeId);if(!store||storeId==="pagnier")throw new IntegrationError("Loja inválida para WooCommerce.");
- const base=storeId==='sacred'&&credentials.siteUrl?credentials.siteUrl:"https://"+store.host;
+ const base=(storeId==='sacred'||storeId==='maya')&&credentials.siteUrl?credentials.siteUrl:"https://"+store.host;
  const url=new URL(base+"/wp-json/wc/v3/"+path);
  for(const [key,value] of Object.entries(params))url.searchParams.set(key,value);
  if(storeId==="maya")url.searchParams.set("lang","en");
@@ -15,7 +15,7 @@ export async function wooPage(storeId:StoreId,credentials:Credentials,path:strin
  try{response=await request(url,{headers:{Authorization:"Basic "+btoa(credentials.key+":"+credentials.secret),Accept:"application/json"},redirect:"manual",signal:AbortSignal.timeout(20000)});}
  catch{throw new IntegrationError("A loja não respondeu em até 20 segundos. Verifique a disponibilidade da API.");}
  // OAuth also works when a reverse proxy hides HTTPS from WordPress.
- if(storeId==='sacred'&&credentials.siteUrl&&response.status===401){
+ if((storeId==='sacred'||storeId==='maya')&&credentials.siteUrl&&response.status===401){
   const detail=await response.clone().json().catch(()=>null) as {code?:string}|null;
   if(detail?.code==='woocommerce_rest_cannot_view'){
    for(const scheme of ['https:','http:'] as const){

@@ -2,12 +2,16 @@ import { STORES, type WooStoreId } from "./inventory";
 export type EnvironmentValues=Record<string,string|undefined>;
 export type EnvironmentConnection={id:WooStoreId;key:string;secret:string;retail?:{siteUrl:string;key:string;secret:string};configurationError?:string};
 export function sacredRetailEnvironment(values:EnvironmentValues){
- const names=['SACRED_RETAIL_SITE_URL','SACRED_RETAIL_CONSUMER_KEY','SACRED_RETAIL_CONSUMER_SECRET'];
+ return retailEnvironment(values,'sacred');
+}
+export function retailEnvironment(values:EnvironmentValues,storeId:'sacred'|'maya'){
+ const prefix=storeId.toUpperCase()+'_RETAIL';
+ const names=[prefix+'_SITE_URL',prefix+'_CONSUMER_KEY',prefix+'_CONSUMER_SECRET'];
  if(!names.some(n=>values[n]?.trim()))return;
  const [siteUrl,key,secret]=names.map(n=>values[n]?.trim());
- if(!siteUrl||!key||!secret)throw new Error('Preencha SACRED_RETAIL_SITE_URL, SACRED_RETAIL_CONSUMER_KEY e SACRED_RETAIL_CONSUMER_SECRET.');
- let url:URL;try{url=new URL(siteUrl);}catch{throw new Error('SACRED_RETAIL_SITE_URL deve ser uma URL HTTPS válida.');}
- if(url.protocol!=='https:'||url.username||url.password||url.port||url.search||url.hash||url.pathname!=='/'||url.hostname.replace(/\.$/,'')==='backend-wholesale.sacred-snuff.com')throw new Error('SACRED_RETAIL_SITE_URL deve apontar para a raiz HTTPS da loja de varejo, diferente do atacado.');
+ if(!siteUrl||!key||!secret)throw new Error('Preencha '+names.join(', ')+'.');
+ let url:URL;try{url=new URL(siteUrl);}catch{throw new Error(prefix+'_SITE_URL deve ser uma URL HTTPS válida.');}
+ if(url.protocol!=='https:'||url.username||url.password||url.port||url.search||url.hash||url.pathname!=='/'||url.hostname.replace(/\.$/,'')===STORES.find(s=>s.id===storeId)!.host)throw new Error(prefix+'_SITE_URL deve apontar para a raiz HTTPS da loja de varejo, diferente do atacado.');
  url.hostname=url.hostname.replace(/\.$/,'');
  return {siteUrl:url.origin,key,secret};
 }
@@ -34,9 +38,14 @@ export function canonicalStoreEnvironment(values:EnvironmentValues):Record<strin
 }
 export function environmentConnections(values:EnvironmentValues):EnvironmentConnection[]{
  const canonical=canonicalStoreEnvironment(values);
- let retail:ReturnType<typeof sacredRetailEnvironment>,configurationError:string|undefined;
- try{retail=sacredRetailEnvironment(values);}catch(error){configurationError=(error as Error).message;}
- return STORES.flatMap(store=>{if(store.id==="pagnier")return [];const name=runtimeNames[store.id],key=canonical[name+"_KEY"],secret=canonical[name+"_SECRET"];return key&&secret?[{id:store.id,key,secret,...(store.id==='sacred'?{...(retail?{retail}:{}),...(configurationError?{configurationError}:{})}:{})}]:[];});
+ return STORES.flatMap(store=>{
+  if(store.id==='pagnier')return [];
+  const name=runtimeNames[store.id],key=canonical[name+'_KEY'],secret=canonical[name+'_SECRET'];
+  if(!key||!secret)return [];
+  let retail:ReturnType<typeof retailEnvironment>,configurationError:string|undefined;
+  if(store.id==='sacred'||store.id==='maya')try{retail=retailEnvironment(values,store.id);}catch(error){configurationError=(error as Error).message;}
+  return [{id:store.id,key,secret,...(retail?{retail}:{}),...(configurationError?{configurationError}:{})}];
+ });
 }
 
 export type ConnectionSetupIssue={id:WooStoreId;message:string};

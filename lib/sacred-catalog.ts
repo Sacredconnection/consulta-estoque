@@ -5,10 +5,15 @@ import {IntegrationError,type Credentials} from './woo';
 // One job and one atomic snapshot for both channels. Negative internal IDs
 // isolate retail Woo IDs from wholesale IDs (including shared parent pools).
 export async function advanceSacred(credentials:Credentials,previous:CatalogCursor,request:typeof fetch=fetch){
+ return advanceStoreChannels('sacred',credentials,previous,request);
+}
+export async function advanceStoreChannels(storeId:'sacred'|'maya',credentials:Credentials,previous:CatalogCursor,request:typeof fetch=fetch){
+ // Resume an in-flight, legacy Maya wholesale-only cursor unchanged.
+ if(storeId==='maya'&&previous.sacredSources===undefined&&!credentials.retail)return advanceCatalog(storeId,credentials,previous,request);
  const source=credentials.retail?.siteUrl??'';
- if(previous.sacredSources!==source)throw new IntegrationError('A configuração da Sacred mudou. Inicie uma nova sincronização.');
+ if(previous.sacredSources!==source)throw new IntegrationError('A configuração da loja mudou. Inicie uma nova sincronização.');
  const retail=previous.sacredPhase==='retail';
- const result=await advanceCatalog('sacred',retail?credentials.retail!:credentials,previous.sacredCursor??initialCursor(),request).catch(error=>{
+ const result=await advanceCatalog(storeId,retail?credentials.retail!:credentials,previous.sacredCursor??initialCursor(),request).catch(error=>{
   if(error instanceof IntegrationError)throw new IntegrationError((retail?'Varejo':'Atacado')+': '+error.message);
   throw error;
  });
@@ -26,8 +31,8 @@ export function combineSacredChannels(records:Product[]):Product[]{
  const groups=new Map<string,Product[]>(),others:Product[]=[];
  for(const p of records){
   const s=p.stocks[0];
-  if(s?.storeId!=='sacred'||!p.sku.trim()){others.push(p);continue;}
-  const key=p.sku.trim().toUpperCase();groups.set(key,[...(groups.get(key)??[]),p]);
+  if(!['sacred','maya'].includes(s?.storeId)||!p.sku.trim()){others.push(p);continue;}
+  const key=s.storeId+':'+p.sku.trim().toUpperCase();groups.set(key,[...(groups.get(key)??[]),p]);
  }
  for(const group of groups.values()){
   const wholesale=group.filter(p=>p.stocks[0].sourceChannel!=='retail'),retail=group.filter(p=>p.stocks[0].sourceChannel==='retail');
