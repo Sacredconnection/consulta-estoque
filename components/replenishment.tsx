@@ -4,6 +4,7 @@ import {useEffect,useState,useRef,useMemo} from 'react';
 import {AlertCircle,ArrowRight,ChevronDown,Download,FileSpreadsheet,FileText,LoaderCircle,RefreshCw,Search,X} from 'lucide-react';
 import {STORES,type StoreId} from '@/lib/inventory';
 import {filterReplenishmentReport,type ReplenishmentReport} from '@/lib/replenishment';
+import type {NomusOrder} from '@/lib/nomus-export';
 
 const number=(value:number)=>value.toLocaleString('pt-BR',{maximumFractionDigits:9});
 const weight=(value:number)=>value.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:6});
@@ -15,13 +16,15 @@ export function Replenishment({storeIds}:{storeIds:StoreId[]}){
  const company=STORES.find(s=>s.id===storeId)!.short;
  const [report,setReport]=useState<ReplenishmentReport|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[exporting,setExporting]=useState(false),[view,setView]=useState<'order'|'review'|'all'>('order');
  const [exportOpen,setExportOpen]=useState(false),exportBox=useRef<HTMLDivElement>(null),exportButton=useRef<HTMLButtonElement>(null);
+ const [nomusOpen,setNomusOpen]=useState(false);
+ const [nomus,setNomus]=useState<NomusOrder>({order:'',customer:'',company:'',issued:new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'})});
  async function load(){
   const request=++sequence.current;setBusy(true);setError('');
   try{const r=await fetch('/api/replenishment?storeId='+storeId,{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Não foi possível carregar o pedido.');if(request===sequence.current)setReport(d);}
   catch(e){if(request===sequence.current)setError((e as Error).message);}
   finally{if(request===sequence.current)setBusy(false);}
  }
- useEffect(()=>{setView('order');void load();return()=>{sequence.current++;};},[storeId]);
+ useEffect(()=>{setView('order');setNomusOpen(false);void load();return()=>{sequence.current++;};},[storeId]);
  useEffect(()=>{
   if(!exportOpen)return;
   function outside(event:PointerEvent){if(!exportBox.current?.contains(event.target as Node))setExportOpen(false);}
@@ -34,9 +37,9 @@ export function Replenishment({storeIds}:{storeIds:StoreId[]}){
  const all=filteredReport?.lines??[],order=all.filter(r=>r.status==='order'),review=all.filter(r=>r.status==='review');
  const lines=view==='order'?order:view==='review'?review:all;
  const knownWeight=order.filter(r=>r.kg!==null),unknownWeight=order.length-knownWeight.length;
- async function save(format:'pdf'|'xlsx'){
+ async function save(format:'pdf'|'xlsx'|'nomus'){
   if(!filteredReport||!order.length)return;setExportOpen(false);setExporting(true);setError('');
-  try{const {exportReplenishment}=await import('@/lib/replenishment-export');await exportReplenishment(filteredReport,format);}
+  try{const {exportReplenishment}=await import('@/lib/replenishment-export');await exportReplenishment(filteredReport,format,nomus);if(format==='nomus')setNomusOpen(false);}
   catch{setError('Não foi possível exportar. Tente novamente.');}
   finally{setExporting(false);exportButton.current?.focus();}
  }
@@ -45,8 +48,16 @@ export function Replenishment({storeIds}:{storeIds:StoreId[]}){
    <div className="replenishment-freshness"><span>{report?.lastSync?`Estoque ${company}: ${date(report.lastSync)} (Brasília)`:'Aguardando estoque da empresa'}</span><button type="button" onClick={()=>void load()} disabled={busy||exporting}><RefreshCw size={14} className={busy?'spin':''}/>{busy?'Recalculando…':'Recalcular'}</button></div>
   </div><div className="replenishment-export-box" ref={exportBox}>
    <button ref={exportButton} type="button" className="replenishment-export-primary" aria-expanded={exportOpen} aria-controls="replenishment-export-options" disabled={!order.length||busy||exporting} onClick={()=>setExportOpen(open=>!open)}>{exporting?<LoaderCircle size={17} className="spin"/>:<Download size={17}/>} {exporting?'Exportando…':'Exportar pedido'}<ChevronDown size={16}/></button>
-   {exportOpen&&<div id="replenishment-export-options" className="replenishment-export-options" role="group" aria-label="Formatos de exportação"><p>Pedido com os filtros atuais</p><button type="button" onClick={()=>void save('pdf')}><FileText size={18}/>Exportar PDF</button><button type="button" onClick={()=>void save('xlsx')}><FileSpreadsheet size={18}/>Exportar Excel</button></div>}
+   {exportOpen&&<div id="replenishment-export-options" className="replenishment-export-options" role="group" aria-label="Formatos de exportação"><p>Pedido com os filtros atuais</p><button type="button" onClick={()=>void save('pdf')}><FileText size={18}/>Exportar PDF</button><button type="button" onClick={()=>void save('xlsx')}><FileSpreadsheet size={18}/>Exportar Excel</button><button type="button" onClick={()=>{setExportOpen(false);setNomusOpen(true);}}><FileSpreadsheet size={18}/>Exportar pedido Nomus</button></div>}
   </div></header>
+  {nomusOpen&&<form className="nomus-export-form" onSubmit={event=>{event.preventDefault();void save('nomus');}} aria-label="Dados do pedido Nomus">
+   <h2>Exportar pedido Nomus — {company}</h2>
+   <p>Use os nomes cadastrados no Nomus. Confira os SKUs, as unidades e preencha os preços na planilha antes de importar. Os filtros atuais serão respeitados.</p>
+   <div className="nomus-export-fields">{([
+    ['order','Pedido','text',true],['customer','Cliente no Nomus','text',true],['company','Empresa no Nomus','text',true],['issued','Data de emissão','date',true],['delivery','Data de entrega','date',false],['sector','Setor de saída','text',false],['movement','Tipo de movimentação','text',false],
+   ] as const).map(([key,label,type,required])=><label key={key}>{label}{required?' *':''}<input autoFocus={key==='order'} type={type} required={required} maxLength={200} value={nomus[key]??''} disabled={exporting} onChange={event=>setNomus(previous=>({...previous,[key]:event.target.value}))}/></label>)}</div>
+   <div className="nomus-export-actions"><button type="submit" disabled={exporting||busy||!order.length}>{exporting?'Gerando…':'Baixar planilha Nomus'}</button><button type="button" disabled={exporting} onClick={()=>{setNomusOpen(false);exportButton.current?.focus();}}>Cancelar</button></div>
+  </form>}
 
   <div className="replenishment-filter-panel"><label className="replenishment-company">Empresa<select value={storeId} disabled={exporting} onChange={event=>{sequence.current++;setReport(null);setError('');setSelectedCategories([]);setQuery('');setExportOpen(false);setStoreId(event.target.value as StoreId);}}>{STORES.filter(s=>s.id==='sacred'||storeIds.includes(s.id)).map(s=><option key={s.id} value={s.id}>{s.short}</option>)}</select></label>
    <CategoryFilter key={storeId} id="replenishment-category" company={company} categories={categories} selected={selectedCategories} disabled={busy||exporting||!report||report.configured===false} onChange={setSelectedCategories} compact/>

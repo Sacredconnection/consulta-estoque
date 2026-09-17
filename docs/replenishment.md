@@ -22,3 +22,10 @@ Os mínimos da Pagnier são do SKU pai e usam kg ou litros conforme a planilha. 
 Embalagens são convertidas pelo peso cadastrado (por exemplo, 2 × 500 g + 1 × 250 g = 1,25 kg). Líquidos usam litros/ml, nunca uma conversão de peso em volume. Saldo ou conversão desconhecidos deixam a família para revisão. Saldos negativos contam como zero disponível.
 
 Reposição Pagnier = máximo entre zero e mínimo menos disponível, **sem arredondamento para unidades inteiras ou múltiplos de 10**. Tela, PDF e Excel indicam a medida e totalizam kg e litros separadamente. A regra de múltiplos de 10 das demais empresas permanece inalterada.
+# Exportação Nomus
+
+Em **Exportar pedido → Exportar pedido Nomus**, informe pedido, cliente, empresa e data de emissão. Data de entrega, setor de saída e tipo de movimentação podem ser preenchidos opcionalmente. Os nomes devem corresponder ao cadastro no Nomus.
+
+O XLSX reproduz exatamente as 26 colunas e a aba `Pedidos de Vendas` do modelo `Importação+de+pedidos+de+venda (2).xlsx`, sem incluir o pedido de exemplo. Exporta somente itens a repor com os filtros atuais, sequencia os itens e repete os dados do pedido. Mantém SKU como texto e quantidade numérica. Pagnier usa KG/LITRO sem arredondamento adicional; demais empresas usam UNID.
+
+Preços e campos comerciais desconhecidos ficam vazios, não zerados. Antes de importar, complete esses campos e confira códigos/unidades no Nomus: a exportação não presume equivalências entre SKUs de lojas e cadastros do ERP. A aba `Comece por aqui` inclui essas orientações. Não há criação automática de pedido no ERP.

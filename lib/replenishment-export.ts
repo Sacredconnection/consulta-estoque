@@ -1,8 +1,16 @@
 import type {ReplenishmentReport,ReplenishmentLine} from './replenishment';
+import type {NomusOrder} from './nomus-export';
 const headers=['SKU','Produto','Apresentação','Estoque atual','Mínimo (un.)','Repor (un.)','Peso (kg)'];
 const values=(r:ReplenishmentLine)=>[r.sku,r.product,r.variation,r.current??'N/D',r.minimum,r.order??'Revisar',r.kg??'N/D'];
 const date=(s:string|null)=>s?new Date(s).toLocaleString('pt-BR',{timeZone:'America/Sao_Paulo'}):'Não informado';
-export async function exportReplenishment(report:ReplenishmentReport,format:'pdf'|'xlsx'){
+export async function exportReplenishment(report:ReplenishmentReport,format:'pdf'|'xlsx'|'nomus',details?:NomusOrder){
+ if(format==='nomus'){
+  if(!details)throw Error('Preencha os dados do pedido Nomus.');
+  const {buildNomusWorkbook}=await import('./nomus-export');
+  const workbook=await buildNomusWorkbook(report,details),buffer=await workbook.xlsx.writeBuffer();
+  download(new Blob([new Uint8Array(buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'Importação Pedidos de Venda - '+details.company.replace(/[\\/:*?"<>|]/g,'_')+'.xlsx');
+  return;
+ }
  const order=report.lines.filter(r=>r.status==='order'),review=report.lines.filter(r=>r.status==='review');
  const company=report.storeName??'Sacred';
  const pagnier=report.storeId==='pagnier';
