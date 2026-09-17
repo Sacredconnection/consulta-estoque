@@ -5,33 +5,46 @@ import {availableCategories,filterCategory} from '../lib/category-filter';
 import {buildStockRows} from '../lib/stock-table';
 import {stockWorkbook} from '../lib/stock-export';
 import type {Product} from '../lib/inventory';
-import {buildNomusWorkbook,NOMUS_HEADERS} from '../lib/nomus-export';
+import {buildNomusWorkbook,NOMUS_HEADERS,nomusDates} from '../lib/nomus-export';
 import {filterReplenishmentReport,type ReplenishmentReport} from '../lib/replenishment';
 
-test('Nomus matches template columns, keeps fractional quantities and leaves unknown commercial data blank',async()=>{
+test('Nomus matches filled template defaults and keeps fractional quantities',async()=>{
  const report:ReplenishmentReport={storeId:'pagnier',source:'test',generatedAt:'2026-09-17',lastSync:null,lines:[
   {sku:'00100',product:'=1+1',variation:'kg',unit:'kg',minimum:3,current:2.27,order:.73,kg:.73,status:'order',categories:['A']},
   {sku:'L',product:'Liquid',variation:'L',unit:'L',minimum:1,current:0,order:1,kg:null,status:'order',categories:['B']},
   {sku:'REVIEW',product:'Review',variation:'',minimum:1,current:null,order:null,kg:null,status:'review'},
   {sku:'OK',product:'OK',variation:'',minimum:1,current:1,order:0,kg:0,status:'ok'},
  ]};
- const details={order:'R-001',customer:'Customer',company:'Company',issued:'2026-09-17'};
- const workbook=await buildNomusWorkbook(report,details),saved=new ExcelJS.Workbook();
+ const details={order:'R-001',customer:'Customer'};
+ const workbook=await buildNomusWorkbook(report,details,new Date('2026-09-17T15:00:00Z')),saved=new ExcelJS.Workbook();
  await saved.xlsx.load(await workbook.xlsx.writeBuffer());
  const sheet=saved.getWorksheet('Pedidos de Vendas')!;
  assert.deepEqual((sheet.getRow(1).values as unknown[]).slice(1),NOMUS_HEADERS);
  assert.equal(sheet.columnCount,26);assert.equal(sheet.rowCount,3);
  assert.equal(sheet.getCell('G2').value,'00100');assert.equal(sheet.getCell('H2').value,'=1+1');
  assert.equal(sheet.getCell('L2').value,.73);assert.equal(sheet.getCell('K2').value,'KG');assert.equal(sheet.getCell('K3').value,'LITRO');
- assert.equal(sheet.getCell('M2').value,null);assert.equal(sheet.getCell('D2').value,'17/09/2026');
+ assert.equal(sheet.getCell('M2').value,10);assert.equal(sheet.getCell('C2').value,'PAGNIER COMERCIO LTDA');
+ assert.equal((sheet.getCell('D2').value as Date).toISOString(),'2026-09-17T00:00:00.000Z');
+ assert.equal((sheet.getCell('N2').value as Date).toISOString(),'2026-10-17T00:00:00.000Z');
  assert.equal(sheet.getCell('A3').value,'R-001');assert.equal(sheet.getCell('F3').value,2);
  const filtered=await buildNomusWorkbook(filterReplenishmentReport(report,['B']),details);
  assert.equal(filtered.getWorksheet('Pedidos de Vendas')!.rowCount,2);
  await assert.rejects(buildNomusWorkbook(report,{...details,customer:''}));
- await assert.rejects(buildNomusWorkbook(report,{...details,issued:'2026-02-30'}));
  await assert.rejects(buildNomusWorkbook({...report,lines:[]},details));
  const maya=await buildNomusWorkbook({...report,storeId:'maya',lines:[{...report.lines[0],unit:undefined,order:10}]},details);
- assert.equal(maya.getWorksheet('Pedidos de Vendas')!.getCell('K2').value,'UNID');
+ assert.equal(maya.getWorksheet('Pedidos de Vendas')!.getCell('K2').value,'UNIDADE');
+});
+test('Nomus delivery adds a calendar month, clamping end-of-month and using Brasilia dates',()=>{
+ for(const [input,issued,delivery] of [
+  ['2026-01-31T15:00:00Z','2026-01-31','2026-02-28'],
+  ['2028-01-31T15:00:00Z','2028-01-31','2028-02-29'],
+  ['2026-12-31T15:00:00Z','2026-12-31','2027-01-31'],
+  ['2026-09-18T01:00:00Z','2026-09-17','2026-10-17'],
+ ]){
+  const dates=nomusDates(new Date(input));
+  assert.equal(dates.issued.toISOString().slice(0,10),issued);
+  assert.equal(dates.delivery.toISOString().slice(0,10),delivery);
+ }
 });
 
 const products:Product[]=[{key:'sku:ONE',sku:'ONE',name:'=1+1',category:'Wholesale',stocks:[

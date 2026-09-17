@@ -6,9 +6,9 @@ const date=(s:string|null)=>s?new Date(s).toLocaleString('pt-BR',{timeZone:'Amer
 export async function exportReplenishment(report:ReplenishmentReport,format:'pdf'|'xlsx'|'nomus',details?:NomusOrder){
  if(format==='nomus'){
   if(!details)throw Error('Preencha os dados do pedido Nomus.');
-  const {buildNomusWorkbook}=await import('./nomus-export');
+  const {buildNomusWorkbook,NOMUS_COMPANY}=await import('./nomus-export');
   const workbook=await buildNomusWorkbook(report,details),buffer=await workbook.xlsx.writeBuffer();
-  download(new Blob([new Uint8Array(buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'Importação Pedidos de Venda - '+details.company.replace(/[\\/:*?"<>|]/g,'_')+'.xlsx');
+  download(new Blob([new Uint8Array(buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'Importação Pedidos de Venda - '+NOMUS_COMPANY+'.xlsx');
   return;
  }
  const order=report.lines.filter(r=>r.status==='order'),review=report.lines.filter(r=>r.status==='review');

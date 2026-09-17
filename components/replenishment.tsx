@@ -17,7 +17,7 @@ export function Replenishment({storeIds}:{storeIds:StoreId[]}){
  const [report,setReport]=useState<ReplenishmentReport|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[exporting,setExporting]=useState(false),[view,setView]=useState<'order'|'review'|'all'>('order');
  const [exportOpen,setExportOpen]=useState(false),exportBox=useRef<HTMLDivElement>(null),exportButton=useRef<HTMLButtonElement>(null);
  const [nomusOpen,setNomusOpen]=useState(false);
- const [nomus,setNomus]=useState<NomusOrder>({order:'',customer:'',company:'',issued:new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'})});
+ const [nomus,setNomus]=useState<NomusOrder>({order:'',customer:''});
  async function load(){
   const request=++sequence.current;setBusy(true);setError('');
   try{const r=await fetch('/api/replenishment?storeId='+storeId,{cache:'no-store'});const d=await r.json();if(!r.ok)throw Error(d.error||'Não foi possível carregar o pedido.');if(request===sequence.current)setReport(d);}
@@ -52,9 +52,9 @@ export function Replenishment({storeIds}:{storeIds:StoreId[]}){
   </div></header>
   {nomusOpen&&<form className="nomus-export-form" onSubmit={event=>{event.preventDefault();void save('nomus');}} aria-label="Dados do pedido Nomus">
    <h2>Exportar pedido Nomus — {company}</h2>
-   <p>Use os nomes cadastrados no Nomus. Confira os SKUs, as unidades e preencha os preços na planilha antes de importar. Os filtros atuais serão respeitados.</p>
+   <p>Empresa: PAGNIER COMERCIO LTDA · Preço unitário: 10, conforme o modelo. Emissão hoje e entrega em um mês. Confira os SKUs e o cliente no Nomus. As medidas kg/litros da Pagnier são preservadas.</p>
    <div className="nomus-export-fields">{([
-    ['order','Pedido','text',true],['customer','Cliente no Nomus','text',true],['company','Empresa no Nomus','text',true],['issued','Data de emissão','date',true],['delivery','Data de entrega','date',false],['sector','Setor de saída','text',false],['movement','Tipo de movimentação','text',false],
+    ['order','Pedido','text',true],['customer','Cliente no Nomus','text',true],
    ] as const).map(([key,label,type,required])=><label key={key}>{label}{required?' *':''}<input autoFocus={key==='order'} type={type} required={required} maxLength={200} value={nomus[key]??''} disabled={exporting} onChange={event=>setNomus(previous=>({...previous,[key]:event.target.value}))}/></label>)}</div>
    <div className="nomus-export-actions"><button type="submit" disabled={exporting||busy||!order.length}>{exporting?'Gerando…':'Baixar planilha Nomus'}</button><button type="button" disabled={exporting} onClick={()=>{setNomusOpen(false);exportButton.current?.focus();}}>Cancelar</button></div>
   </form>}
