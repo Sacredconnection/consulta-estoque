@@ -16,7 +16,7 @@ test('parents without direct assignments appear and include all descendants, wit
  assert.equal(filterCategory(products,'sacred','Tribal').length,0);
  const lines=sacredReplenishment([{sku:'3',product:'Product',variation:'10g',minimum:10}],products);
  assert.ok(lines[0].categories!.includes('Rapé'));
- const report=filterReplenishmentReport({source:'CSV',lastSync:null,generatedAt:'now',lines},['Rapé']);assert.equal(report.lines.length,1);assert.equal(report.lines[0].order,7);
+ const report=filterReplenishmentReport({source:'CSV',lastSync:null,generatedAt:'now',lines},['Rapé']);assert.equal(report.lines.length,1);assert.equal(report.lines[0].order,10);
 });
 test('old cached category names recover unique ancestry, cycles do not loop',()=>{
  const p=product(3);delete p.stocks[0].categoryIds;

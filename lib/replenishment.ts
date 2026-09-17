@@ -17,7 +17,7 @@ export function sacredReplenishment(minima:SacredMinimum[],products:Product[],st
   const reason=stocks.some(s=>s.shared||s.packaging==='shared')?'Saldo compartilhado: conferir variação':stocks.length>1?'SKU duplicado na integração':stocks.some(s=>s.quantity===null)?'Quantidade não informada':stocks.some(s=>(s.quantityUnit??'un.')!=='un.')?'Unidade diferente da referência do CSV':undefined;
   const categories=[...new Set(stocks.flatMap(s=>s.categories??[]))];
   if(reason)return {...m,categories,current:null,order:null,kg:null,status:'review' as const,reason};
-  const current=stocks[0].quantity!,order=Math.max(0,Math.ceil(m.minimum-Math.max(0,current)));
+  const current=stocks[0].quantity!,order=Math.max(0,Math.ceil((m.minimum-Math.max(0,current))/10)*10);
   return {...m,categories,current,order,kg:stocks[0].grams==null?null:order*stocks[0].grams/1000,status:order?'order' as const:'ok' as const};
  }).sort((a,b)=>a.product.localeCompare(b.product,'pt-BR')||a.sku.localeCompare(b.sku,'pt-BR',{numeric:true}));
 }

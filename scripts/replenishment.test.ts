@@ -9,7 +9,7 @@ test('Sacred minima use only live Sacred balances, preserving unknown/shared/dup
  const shared=make('D',5);shared.stocks[0].shared=true;
  const duplicate=make('E',3);duplicate.stocks.push({...duplicate.stocks[0],id:2});
  const lines=sacredReplenishment(minima,[make('A',4),make('A',100,'maya'),make('B',-3),make('C',null),shared,duplicate,make('F',20,'pagnier')]);
- assert.equal(lines[0].order,6);assert.equal(lines[0].kg,.06);assert.equal(lines[1].order,10);
+ assert.equal(lines[0].order,10);assert.equal(lines[0].kg,.1);assert.equal(lines[1].order,10);
  assert.equal(lines.length,5);assert.ok(!lines.some(r=>r.sku==='F'));
  assert.ok(lines.slice(2).every(r=>r.order===null&&r.status==='review'));
  assert.equal(sacredReplenishment([{...minima[0],minimum:0}],[make('A',-5)])[0].order,0);
@@ -19,7 +19,7 @@ test('selected company excludes CSV-only and other-company SKUs, and uses integr
  const minimum={sku:'A',product:'CSV name',variation:'CSV variation',minimum:10};
  const sacred=make('A',4),maya=make('A',8,'maya');sacred.stocks[0].productName='Sacred name';
  assert.equal(sacredReplenishment([minimum],[sacred,maya])[0].product,'Sacred name');
- assert.equal(sacredReplenishment([minimum],[sacred,maya],'maya')[0].order,2);
+ assert.equal(sacredReplenishment([minimum],[sacred,maya],'maya')[0].order,10);
  assert.equal(sacredReplenishment([minimum],[maya]).length,0);
  assert.equal(sacredReplenishment([minimum],[]).length,0);
 });
@@ -30,7 +30,7 @@ test('Pagnier labels disappear from cached products without affecting other stor
 import {filterReplenishmentReport,type ReplenishmentReport} from '../lib/replenishment';
 test('replenishment categories accumulate without duplicating lines and preserve review items',()=>{
  const report:ReplenishmentReport={source:'test',lastSync:null,generatedAt:'now',lines:[
-  {sku:'A',product:'A',variation:'',minimum:10,current:2,order:8,kg:.08,status:'order',categories:['Rapé','Latas']},
+  {sku:'A',product:'A',variation:'',minimum:10,current:2,order:10,kg:.1,status:'order',categories:['Rapé','Latas']},
   {sku:'B',product:'B',variation:'',minimum:10,current:null,order:null,kg:null,status:'review',categories:['Ervas']},
   {sku:'C',product:'C',variation:'',minimum:10,current:10,order:0,kg:0,status:'ok',categories:['Outros']},
  ]};
@@ -43,4 +43,11 @@ test('replenishment categories accumulate without duplicating lines and preserve
  assert.equal(searched.lines[0].order,null);
  assert.equal(searched.search,'b');
  assert.equal(filterReplenishmentReport(report,['Rapé'],'B').lines.length,0);
+});
+test('replenishment rounds positive deficits up to multiples of ten and calculates weight from rounded units',()=>{
+ for(const [minimum,current,expected] of [[10,7,10],[20,9,20],[20,0,20],[10,10,0],[10,15,0],[11,-4,20],[10,9.5,10],[30,9.5,30],[0,0,0]]){
+  const line=sacredReplenishment([{sku:'A',product:'A',variation:'10g',minimum}],[make('A',current)])[0];
+  assert.equal(line.order,expected,`minimum=${minimum}, current=${current}`);
+  assert.equal(line.kg,expected*10/1000);assert.equal(line.status,expected?'order':'ok');
+ }
 });

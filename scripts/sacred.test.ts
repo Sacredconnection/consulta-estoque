@@ -89,7 +89,7 @@ test('Sacred checkpoints both sources and isolates overlapping Woo IDs',async()=
  const products=mergeCatalog(combineSacredChannels([...a.records,...b.records]));
  assert.equal(products.length,1);assert.equal(products[0].stocks[0].quantity,6);
  const lines=sacredReplenishment([{sku:'SKU',product:'Product',variation:'',minimum:15}],products);
- assert.equal(lines[0].order,9);
+ assert.equal(lines[0].order,10);
  await assert.rejects(advanceSacred(credentials,{...a.cursor,sacredSources:'https://old.example'},request));
  await assert.rejects(advanceSacred(credentials,a.cursor,(async()=>{throw Error('offline');}) as typeof fetch));
 });
