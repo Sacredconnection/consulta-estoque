@@ -4,6 +4,36 @@ import {sacredReplenishment} from '../lib/replenishment';
 import {visibleCatalog} from '../lib/catalog-visibility';
 import type {Product} from '../lib/inventory';
 const make=(sku:string,quantity:number|null,storeId:'sacred'|'maya'|'pagnier'='sacred'):Product=>({key:sku,sku,name:'Produto',category:'',stocks:[{id:1,storeId,quantity,grams:10,status:'instock',updatedAt:'now'}]});
+const pg=(sku:string,id:number,quantity:number|null,quantityUnit:string,grams:number|null,name='Produto'):Product=>({key:String(id),sku,name,category:'',stocks:[{id,parentId:id,storeId:'pagnier',quantity,quantityUnit,grams,productName:name,status:'instock',updatedAt:'now'}]});
+test('Pagnier aggregates parent and all packaged children in kg without order rounding',()=>{
+ const minimum={sku:'RASC2300',product:'Rapé Kg',variation:'',minimum:3,unit:'kg' as const};
+ const parent=pg('RASC2300',1,1,'kg',1000);
+ const child=pg('RASC2301',2,2,'un.',500);
+ const products=[parent,child,child,pg('RASC2302',3,1,'un.',250),pg('RASC2303',4,1,'un.',100),pg('RASC2401',5,100,'un.',500),make('RASC2300',100,'maya')];
+ const [line]=sacredReplenishment([minimum],products,'pagnier');
+ assert.equal(line.current,2.35);assert.equal(line.order,.65);assert.equal(line.kg,.65);assert.equal(line.status,'order');
+ assert.equal(sacredReplenishment([minimum],products.slice(1),'pagnier')[0].current,1.35);
+ const otherLocation=pg('RASC2300',6,.7,'kg',1000);
+ assert.equal(sacredReplenishment([minimum],[...products,otherLocation],'pagnier')[0].order,0);
+});
+test('Pagnier uses liters and ml, not mass, and preserves unknown quantities and conversions for review',()=>{
+ const minimum={sku:'SASC0300',product:'Sananga L',variation:'',minimum:.5,unit:'L' as const};
+ const parent=pg('SASC0300',1,.04,'LITRO',null),child=pg('SASC0310',2,10,'un.',20,'Sananga 10 ml');
+ const [line]=sacredReplenishment([minimum],[parent,child],'pagnier');
+ assert.equal(line.current,.14);assert.equal(line.order,.36);assert.equal(line.kg,null);
+ for(const bad of [pg('SASC0310',2,null,'un.',null,'Sananga 10 ml'),pg('SASC0310',2,2,'un.',500,'Sananga')]){
+  assert.equal(sacredReplenishment([minimum],[parent,bad],'pagnier')[0].status,'review');
+ }
+ child.stocks[0].shared=true;
+ assert.equal(sacredReplenishment([minimum],[parent,child],'pagnier')[0].status,'review');
+});
+test('Pagnier converts grams, ignores negative availability, and keeps fractional minima',()=>{
+ const minimum={sku:'CZMS0100',product:'Cinza Kg',variation:'',minimum:.5,unit:'kg' as const};
+ const products=[pg('CZMS0100',1,-2,'kg',1000),pg('CZMS0101',2,125,'g',1)];
+ const [line]=sacredReplenishment([minimum],products,'pagnier');
+ assert.equal(line.current,.125);assert.equal(line.order,.375);
+ assert.equal(sacredReplenishment([{...minimum,minimum:0}],products,'pagnier')[0].order,0);
+});
 test('Sacred minima use only live Sacred balances, preserving unknown/shared/duplicate cases for review',()=>{
  const minima=['A','B','C','D','E','F'].map(sku=>({sku,product:'Produto',variation:'10g',minimum:10}));
  const shared=make('D',5);shared.stocks[0].shared=true;

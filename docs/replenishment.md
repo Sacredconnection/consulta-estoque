@@ -15,3 +15,10 @@ O filtro de empresas das consultas não modifica o seletor de reposição. Os m�
 # Filtros de categoria
 
 A reposição permite adicionar várias categorias da empresa selecionada. A seleção inclui produtos de qualquer uma delas, sem duplicar SKUs, e aplica-se ao pedido, aos itens para revisão, a todos os mínimos e aos totais. PDF e Excel usam o mesmo conjunto filtrado e identificam as categorias no arquivo. Remova seleções individualmente ou use Limpar categorias; trocar a empresa limpa o filtro. Recalcular preserva a seleção.
+# Regra específica da Pagnier
+
+Os mínimos da Pagnier são do SKU pai e usam kg ou litros conforme a planilha. O disponível soma o pai (código terminado em `00`) e as apresentações da mesma família de seis caracteres no catálogo Nomus. Cada posição de estoque é contada uma vez, preservando a soma de setores distintos. Filhos podem compor o saldo mesmo quando o pai não está no catálogo.
+
+Embalagens são convertidas pelo peso cadastrado (por exemplo, 2 × 500 g + 1 × 250 g = 1,25 kg). Líquidos usam litros/ml, nunca uma conversão de peso em volume. Saldo ou conversão desconhecidos deixam a família para revisão. Saldos negativos contam como zero disponível.
+
+Reposição Pagnier = máximo entre zero e mínimo menos disponível, **sem arredondamento para unidades inteiras ou múltiplos de 10**. Tela, PDF e Excel indicam a medida e totalizam kg e litros separadamente. A regra de múltiplos de 10 das demais empresas permanece inalterada.
