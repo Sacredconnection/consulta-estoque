@@ -1,3 +1,4 @@
+import { prepareCatalogPage } from './stock-persistence';
 import { advanceStoreChannels } from './sacred-catalog';
 import { database,configuredEnvironmentConnections,ensureEnvironmentConnections,getConnections,getRule,ApiError } from "./server";
 import { initialCursor,advanceCatalog,type CatalogCursor } from "./sync-cursor";
@@ -19,7 +20,7 @@ export async function startSynchronization(options:{force?:boolean;storeId?:Stor
  const at=new Date().toISOString();
  await database().batch(selected.flatMap(c=>[
   database().prepare("UPDATE connections SET lock_until=0,lock_token=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND (COALESCE(json_extract(cursor,'$.catalogVersion'),0)!=? OR (store_id IN ('sacred','maya') AND COALESCE(json_extract(cursor,'$.sacredSources'),'') IS NOT ?)))").bind(c.id,c.id,CATALOG_VERSION,configured.find(x=>x.id===c.id)?.retail?.siteUrl??""),
-  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR (COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=? OR (sync_jobs.store_id IN ('sacred','maya') AND COALESCE(json_extract(sync_jobs.cursor,'$.sacredSources'),'') IS NOT ?))").bind(c.id,crypto.randomUUID(),"running",JSON.stringify({...initialCursor(),sourceRevision:c.sourceRevision,...((c.id==="sacred"||c.id==="maya")?{sacredSources:configured.find(x=>x.id===c.id)?.retail?.siteUrl??""}:{})}),at,at,CATALOG_VERSION,configured.find(x=>x.id===c.id)?.retail?.siteUrl??""),
+  database().prepare("INSERT INTO sync_jobs (store_id,run_id,status,cursor,started_at,updated_at,error) VALUES (?,?,?,?,?,?,NULL) ON CONFLICT(store_id) DO UPDATE SET run_id=excluded.run_id,status=excluded.status,cursor=excluded.cursor,started_at=excluded.started_at,updated_at=excluded.updated_at,error=NULL WHERE sync_jobs.status!='running' OR (COALESCE(json_extract(sync_jobs.cursor,'$.catalogVersion'),0)!=? OR (sync_jobs.store_id IN ('sacred','maya') AND COALESCE(json_extract(sync_jobs.cursor,'$.sacredSources'),'') IS NOT ?))").bind(c.id,crypto.randomUUID(),"running",JSON.stringify({...initialCursor(),seenProductIds:[],sourceRevision:c.sourceRevision,...((c.id==="sacred"||c.id==="maya")?{sacredSources:configured.find(x=>x.id===c.id)?.retail?.siteUrl??""}:{})}),at,at,CATALOG_VERSION,configured.find(x=>x.id===c.id)?.retail?.siteUrl??""),
   database().prepare("UPDATE connections SET error=NULL WHERE id=? AND EXISTS (SELECT 1 FROM sync_jobs WHERE store_id=? AND status='running')").bind(c.id,c.id),
  ]));
  return {connections:await getConnections(),message:"Atualização iniciada. O progresso de cada loja será mostrado abaixo."};
@@ -38,16 +39,22 @@ export async function advanceSynchronization(storeId:StoreId,runId:string){
   if(credentials.id!=='pagnier'&&credentials.configurationError)throw new IntegrationError(credentials.configurationError);
   const result=credentials.id==="pagnier"?await advancePagnier(previous):(storeId==="sacred"||storeId==="maya")?await advanceStoreChannels(storeId,credentials,previous):await advanceCatalog(storeId,credentials,previous);
   const at=new Date().toISOString();
-  // Records, checkpoint and final publication commit in one database transaction.
-  // json_each keeps the batch bounded to a few SQL statements even for hundreds of variants.
-  const statements=[
+  // Legacy in-flight jobs finish with their original snapshot strategy.
+  const delta=previous.seenProductIds!==undefined;
+  const page=delta?await prepareCatalogPage(db,{storeId,runId,token,records:result.records,seen:previous.seenProductIds!,done:result.done}):null;
+  if(page)result.cursor.seenProductIds=page.seen;
+  const statements=page?.statements??[
    db.prepare("INSERT INTO records (snapshot,store_id,product_id,payload) SELECT ?,?,json_extract(value,'$.stocks[0].id'),value FROM json_each(?) WHERE "+owned+" ON CONFLICT(snapshot,store_id,product_id) DO UPDATE SET payload=excluded.payload").bind(runId,storeId,JSON.stringify(result.records),storeId,token),
-   db.prepare("UPDATE sync_jobs SET cursor=?,status=?,updated_at=?,error=NULL WHERE store_id=? AND run_id=? AND "+owned).bind(JSON.stringify(result.cursor),result.done?"succeeded":"running",at,storeId,runId,storeId,token),
   ];
-  if(result.done)statements.push(db.prepare("UPDATE connections SET snapshot=?,last_sync=?,snapshot_revision=?,error=NULL WHERE id=? AND lock_token=?").bind(runId,at,previous.sourceRevision??0,storeId,token));
+  const checkpointIndex=statements.length;
+  statements.push(db.prepare("UPDATE sync_jobs SET cursor=?,status=?,updated_at=?,error=NULL WHERE store_id=? AND run_id=? AND "+owned).bind(JSON.stringify(result.cursor),result.done?"succeeded":"running",at,storeId,runId,storeId,token));
+  if(result.done){
+   statements.push(db.prepare("UPDATE connections SET snapshot=?,last_sync=?,snapshot_revision=?,error=NULL WHERE id=? AND lock_token=?").bind(page?.snapshot??runId,at,previous.sourceRevision??0,storeId,token));
+   if(!delta)statements.push(db.prepare("DELETE FROM records WHERE store_id=? AND snapshot!=? AND "+owned).bind(storeId,runId,storeId,token));
+  }
+  // Deltas, removals, publication and checkpoint commit together.
   const committed=await db.batch(statements);
-  if(!committed[1].meta.changes)return {busy:true,connections:await getConnections()};
-  if(result.done)await db.prepare("DELETE FROM records WHERE store_id=? AND snapshot!=? AND "+owned).bind(storeId,runId,storeId,token).run();
+  if(!committed[checkpointIndex].meta.changes)return {busy:true,connections:await getConnections()};
   return {busy:false,connections:await getConnections()};
  }catch(error){
   if(error instanceof ApiError)throw error;

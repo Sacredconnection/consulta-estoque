@@ -89,13 +89,15 @@ test('sheet-delivered rows and conflicting duplicate codes never contact provide
   assert.equal((await readTracking()).rows[0].attemptedAt,null);
  });}finally{sqlite.close();setTestDatabase(undefined);}
 });
-test('history retains unchanged responses and changed ETA; cache/history commit atomically',async()=>{
+test('history retains changed ETA and skips identical responses; cache/history commit atomically',async()=>{
  const row=shipment(1),sqlite=memory(state([row]));let count=0;
- try{await mockFetch(async()=>{const data=info();data.time_metrics.estimated_delivery_date.to=count++?'2026-09-20':'2026-09-18';return response([{number:row.tracking,carrier:100003,track_info:data}]);},async()=>{
+ try{await mockFetch(async()=>{const data=info();data.time_metrics.estimated_delivery_date.to=['2026-09-18','2026-09-20','2026-09-20','2026-09-22'][count++];return response([{number:row.tracking,carrier:100003,track_info:data}]);},async()=>{
   await refreshTracking(true);await refreshTracking(true);
   const history=await trackingHistory({shipmentId:row.id});assert.equal(history.items.length,3);
   assert.equal(history.items[0].data.response?.expectedDelivery,'2026-09-20');assert.equal(history.items[0].changed,false);
   assert.equal(history.items[1].data.response?.expectedDelivery,'2026-09-18');assert.equal(history.items[1].changed,true);
+  await refreshTracking(true);
+  assert.equal((await trackingHistory({shipmentId:row.id})).items.length,3);
   const saved=await readTracking();
   sqlite.exec("CREATE TRIGGER reject_history BEFORE INSERT ON tracking_history WHEN NEW.kind='consultation' BEGIN SELECT RAISE(ABORT,'test failure'); END;");
   await assert.rejects(()=>refreshTracking(true),/test failure/);
@@ -155,3 +157,12 @@ test('failed refresh preserves last successful result; delivered/history skip au
   await assert.rejects(()=>refreshTracking(true),/em andamento/);assert.equal(requests,1);
  });}finally{sqlite.close();setTestDatabase(undefined);}
 });
+
+ test('paused tracking scheduler performs no database writes',async()=>{
+  const sqlite=memory({...state([shipment(1)]),enabled:false});
+  try{
+   const before=sqlite.prepare('SELECT total_changes() AS n').get()!.n;
+   await refreshTracking();await refreshTracking();
+   assert.equal(sqlite.prepare('SELECT total_changes() AS n').get()!.n,before);
+  }finally{sqlite.close();setTestDatabase(undefined);}
+ });

@@ -81,3 +81,12 @@ test('WooCommerce cache notifications require the correct source signature and e
  assert.equal(validStockNotification('sacred',headers,Buffer.from('{}'),env),false);
  assert.equal(validStockNotification('sacred',new Headers(),raw,env),false);
 });
+
+test('scheduled failures back off while manual refresh remains available',()=>{
+ const now=Date.parse('2026-09-10T15:00:00Z');
+ const failed={catalogReady:false,needsSync:true,sync:{status:'failed',updatedAt:'2026-09-10T14:55:00Z'}};
+ assert.equal(scheduledRefreshDue(failed,5,now),false);
+ assert.equal(scheduledRefreshDue(failed,30,now),false);
+ assert.equal(scheduledRefreshDue(failed,30,now+30*60000),true);
+ assert.equal(shouldStartSynchronization(failed,true),true);
+});

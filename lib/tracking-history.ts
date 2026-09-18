@@ -33,8 +33,8 @@ export function historyStatement(input:{key:string;row:TrackedShipment|null;ship
   VALUES (?,?,?,?,?,?,?,?,?,?)`).bind(input.key,row?.id??input.shipmentId??'',row?.order??'',row?.tracking??'',row?.carrier??'',input.at,input.kind,input.status??input.response?.status??row?.result?.status??null,input.changed?1:0,JSON.stringify(data));
 }
 export async function migrateTrackingHistory(state:TrackingState){
- await ensureTrackingHistory();
  if(state.historyVersion===1)return;
+ await ensureTrackingHistory();
  const db=getDatabase(),rows=new Map(state.rows.map(row=>[row.id,row]));
  const statements:Statement[]=[];
  for(const row of state.rows)statements.push(historyStatement({key:'baseline:'+hash(row),row,at:new Date().toISOString(),kind:'baseline'}));

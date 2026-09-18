@@ -16,7 +16,7 @@ export async function readTracking():Promise<TrackingState>{
 }
 async function save(state:TrackingState,events:Statement[]=[]){
  // Consultation events and the current cache become visible atomically.
- await getDatabase().batch([...events,getDatabase().prepare('INSERT INTO settings (id,payload) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload').bind(key,JSON.stringify(state))]);
+ await getDatabase().batch([...events,getDatabase().prepare('INSERT INTO settings (id,payload) VALUES (?,?) ON CONFLICT(id) DO UPDATE SET payload=excluded.payload WHERE settings.payload!=excluded.payload').bind(key,JSON.stringify(state))]);
 }
 async function stateForWrite(){const state=await readTracking();await migrateTrackingHistory(state);return state;}
 async function locked<T>(fn:()=>Promise<T>):Promise<T>{
@@ -43,6 +43,8 @@ export async function configureTracking(enabled:boolean,interval:number){
  return locked(async()=>{const state=await stateForWrite();state.enabled=enabled;state.interval=interval;await save(state);return state;});
 }
 export async function refreshTracking(manual=false,id?:string){
+ // A paused scheduler only reads its setting; it does not acquire a write lock.
+ if(!manual){const current=await readTracking();if(!current.enabled)return current;}
  return locked(async()=>{
   const state=await stateForWrite();if(!manual&&!state.enabled){await save(state);return state;}
   const unified=track17Configured();
@@ -65,11 +67,12 @@ export async function refreshTracking(manual=false,id?:string){
    for(const target of state.rows){
     const update=results.get(trackingKey(target));if(!update)continue;
     const previousStatus=target.result?.status??null;
+    const historyChanged=trackingContent(target.result)!==trackingContent(update.result??target.result)||target.error!==update.error;
     target.attemptedAt=attemptedAt;target.error=update.error;
     if(update.result){
      target.result=update.result;
     }
-    events.push(historyStatement({key:`query:${runId}:${target.id}`,row:target,at:attemptedAt,kind:'consultation',response:update.result,error:update.error,provider:unified?'17TRACK':target.carrier,previousStatus,changed:!!update.result&&previousStatus!==update.result.status}));
+    if(historyChanged)events.push(historyStatement({key:`query:${runId}:${target.id}`,row:target,at:attemptedAt,kind:'consultation',response:update.result,error:update.error,provider:unified?'17TRACK':target.carrier,previousStatus,changed:!!update.result&&previousStatus!==update.result.status}));
    }
    await save(state,events);
   }
@@ -87,3 +90,5 @@ export async function trackingHistory(filter:HistoryFilter={}){
  if(state.historyVersion!==1)await locked(async()=>{await save(await stateForWrite());});
  return listTrackingHistory(filter);
 }
+
+function trackingContent(result:TrackingResult|null){if(!result)return null;const {checkedAt,carrierSyncedAt,...content}=result;return JSON.stringify(content);}
