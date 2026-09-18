@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildBulkGroups,bulkTotal} from '../lib/bulk-summary';
 import type {Product,Stock} from '../lib/inventory';
-function product(sku:string,stock:Partial<Stock>={},name='Yawanawa'):Product{return {key:sku,sku,name,category:'Test',stocks:[{id:1,parentId:100,storeId:'maya',grams:100,quantity:10,status:'instock',packaging:'bulk',updatedAt:'',productName:name,...stock}]};}
+function product(sku:string,stock:Partial<Stock>={},name='Yawanawa'):Product{return {key:sku,sku,name,category:'Rapé',stocks:[{id:1,parentId:100,storeId:'maya',grams:100,quantity:10,status:'instock',packaging:'bulk',updatedAt:'',productName:name,...stock}]};}
 test('bulk families show only 100/250/500g pots and total their actual mass per company',()=>{
  const products=[product('RAYA02-100'),product('RAYA0205',{id:2,storeId:'sacred',grams:250,quantity:4}),product('RAYA0208',{id:3,storeId:'pagnier',grams:500,quantity:6,quantityUnit:'un.'}),product('RAYA02-50',{id:4,grams:50,packaging:'can',quantity:1000}),product('RAYA0200',{id:5,storeId:'pagnier',grams:1000,quantityUnit:'kg',quantity:1000}),product('RAYA02-1000',{id:6,grams:1000,quantity:1000})];
  const groups=buildBulkGroups(products,['maya','sacred','pagnier']);
@@ -22,4 +22,19 @@ test('duplicate source positions count once and same-name unrelated parents stay
  const groups=buildBulkGroups([first,first,second,product('CUSTOM-C',{id:3,parentId:20,grams:500})],['maya']);
  assert.equal(groups.length,2);assert.equal(bulkTotal(groups).kg,8.5);
  assert.equal(groups.find(g=>g.key==='parent:maya:10')?.sizes[100]?.maya?.quantity,10);
+});
+
+test('bulk summary excludes herbs and packaging and recognizes rape by SKU, category or name',()=>{
+ const products=[
+  {...product('RAYA02-100',{id:1,parentId:1}),category:'Sem categoria'},
+  product('CUSTOM-RAPE',{id:2,parentId:2,categories:['Rapés']}),
+  {...product('CUSTOM-HERB',{id:3,parentId:3,categories:['Ervas']},'Blue Lotus'),category:'Rapé'},
+  {...product('CUSTOM-NAME',{id:4,parentId:4,categories:[]},'Rapé Tsunu'),category:''},
+  product('CUSTOM-LABEL',{id:5,parentId:5},'Etiqueta Rapé'),
+  product('CUSTOM-JAR',{id:6,parentId:6},'Pote vazio para rapé'),
+  {...product('CUSTOM-PATH',{id:7,parentId:7,categories:['Yawanawa'],categoryPaths:[['Rapé','Yawanawa']]},'Yawanawa'),category:''},
+ ];
+ const groups=buildBulkGroups(products,['maya']);
+ assert.equal(groups.length,4);assert.equal(bulkTotal(groups).kg,4);
+ assert.ok(!groups.some(g=>/Lotus|Etiqueta|vazio/.test(g.name)));
 });

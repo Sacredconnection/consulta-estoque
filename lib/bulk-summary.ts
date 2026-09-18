@@ -17,11 +17,18 @@ function family(product:Product,stock:Stock){
  // Do not guess variant weights or remove arbitrary numeric SKU suffixes.
  return {key:stock.parentId!==undefined?'parent:'+stock.storeId+':'+stock.parentId:'product:'+product.key,code:''};
 }
+function isRape(product:Product,stock:Stock){
+ const name=normalize(stock.productName??product.name);
+ if(/\b(etiquetas?|embalagens?|embalagem|aplicadores?|kuripes?|tepis?)\b|\bpotes? vazios?\b/.test(name))return false;
+ if(/^RA[A-Z]{2}\d{2}(?:-\d+(?:\.\d+)?|\d{2})?$/i.test(product.sku.trim()))return true;
+ const categories=stock.categoryPaths?.flat()??stock.categories??product.category.split(',');
+ return /\b(rapes?|hape|rapeh|snuff)\b/.test(normalize(categories.join(' ')))||/\b(rapes?|hape|rapeh|snuff)\b/.test(name);
+}
 export function buildBulkGroups(products:Product[],storeIds:StoreId[]):BulkGroup[]{
  const allowed=new Set(storeIds),seen=new Set<string>();
  const groups=new Map<string,BulkGroup>();
  for(const product of products)for(const stock of product.stocks){
-  if(!allowed.has(stock.storeId)||!BULK_SIZES.includes(stock.grams as BulkSize)||(stock.quantityUnit??'un.')!=='un.'||stock.packaging!=='bulk'||stock.shared)continue;
+  if(!allowed.has(stock.storeId)||!isRape(product,stock)||!BULK_SIZES.includes(stock.grams as BulkSize)||(stock.quantityUnit??'un.')!=='un.'||stock.packaging!=='bulk'||stock.shared)continue;
   const identity=stock.storeId+':'+stock.id;
   if(seen.has(identity))continue;seen.add(identity);
   const {key,code}=family(product,stock),name=stock.productName??product.name;
