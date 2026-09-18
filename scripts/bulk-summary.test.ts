@@ -1,3 +1,5 @@
+import ExcelJS from 'exceljs';
+import {bulkWorkbook} from '../lib/bulk-export';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {buildBulkGroups,bulkTotal} from '../lib/bulk-summary';
@@ -8,7 +10,7 @@ test('bulk families show only 100/250/500g pots and total their actual mass per 
  const groups=buildBulkGroups(products,['maya','sacred','pagnier']);
  assert.equal(groups.length,1);assert.equal(groups[0].code,'RAYA02');
  assert.equal(groups[0].sizes[100]?.maya?.quantity,10);assert.equal(groups[0].sizes[250]?.sacred?.quantity,4);assert.equal(groups[0].sizes[500]?.pagnier?.quantity,6);
- assert.equal(bulkTotal(groups).kg,5);assert.equal(bulkTotal(groups,'sacred').kg,1);
+ assert.equal(bulkTotal(groups).kg,1005);assert.equal(groups[0].loose.pagnier?.kg,1000);assert.equal(bulkTotal(groups,'sacred').kg,1);
  assert.equal(bulkTotal(buildBulkGroups(products,['maya'])).kg,1);
 });
 test('unknown, absent, zero, negative and shared stock remain distinct',()=>{
@@ -37,4 +39,31 @@ test('bulk summary excludes herbs and packaging and recognizes rape by SKU, cate
  const groups=buildBulkGroups(products,['maya']);
  assert.equal(groups.length,4);assert.equal(bulkTotal(groups).kg,4);
  assert.ok(!groups.some(g=>/Lotus|Etiqueta|vazio/.test(g.name)));
+});
+
+test('bulk Excel mirrors filtered companies, totals, pot sizes and unknown quantities',async()=>{
+ const groups=buildBulkGroups([product('RAYA02-100',{quantity:10},'=1+1'),product('RAYA02-250',{id:2,grams:250,quantity:null},'=1+1'),product('RAYA0205',{id:3,storeId:'sacred',grams:250,quantity:20},'=1+1')],['maya','sacred']);
+ const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(await bulkWorkbook(groups,['maya'],'RAYA02'));
+ const sheet=workbook.getWorksheet('Granel simplificado')!;
+ assert.deepEqual((sheet.getRow(1).values as unknown[]).slice(1),['Produto / pote','Maya']);
+ assert.equal(sheet.getCell('A2').value,'Total granel (kg)');assert.equal(sheet.getCell('B2').value,1);assert.match(sheet.getCell('B2').numFmt,/\*/);
+ assert.equal(sheet.getCell('A3').value,'=1+1 · RAYA02 · Total kg');assert.equal(sheet.getCell('B3').value,1);
+ assert.equal(sheet.getCell('B4').value,10);assert.equal(sheet.getCell('B5').value,'N/D');assert.equal(sheet.getCell('B6').value,'—');
+ assert.ok(sheet.getRows(1,sheet.rowCount)!.some(row=>row.getCell(1).value==='Busca: RAYA02'));
+ assert.equal(sheet.columnCount,2);
+});
+
+test('RASC3900 Bobinsana Kg appears without pots and exports Pagnier mass exactly once',async()=>{
+ const bobinsana=product('RASC3900',{id:39,parentId:39,storeId:'pagnier',quantityUnit:'kg',grams:1000,quantity:12.75},'Rapé Bobinsana Kg');
+ const groups=buildBulkGroups([bobinsana,bobinsana],['pagnier']);
+ assert.equal(groups.length,1);assert.equal(groups[0].code,'RASC39');
+ assert.equal(groups[0].loose.pagnier?.kg,12.75);assert.deepEqual(groups[0].sizes,{});assert.equal(bulkTotal(groups).kg,12.75);
+ assert.equal(buildBulkGroups([bobinsana],['maya']).length,0);
+ const workbook=new ExcelJS.Workbook();await workbook.xlsx.load(await bulkWorkbook(groups,['pagnier']));
+ const sheet=workbook.getWorksheet('Granel simplificado')!;
+ assert.equal(sheet.getCell('B2').value,12.75);assert.equal(sheet.getCell('B3').value,12.75);assert.equal(sheet.getCell('A4').value,'    Granel (kg)');assert.equal(sheet.getCell('B4').value,12.75);assert.equal(sheet.getCell('B5').value,'—');
+ const combined=buildBulkGroups([bobinsana,product('RASC39-250',{id:40,grams:250,quantity:4},'Rapé Bobinsana')],['pagnier','maya']);
+ assert.equal(combined.length,1);assert.equal(bulkTotal(combined).kg,13.75);assert.equal(combined[0].sizes[250]?.maya?.quantity,4);
+ const unknown=buildBulkGroups([product('RASC3900',{id:39,storeId:'pagnier',grams:1000,quantityUnit:'kg',quantity:null})],['pagnier']);
+ assert.equal(bulkTotal(unknown).kg,null);assert.equal(bulkTotal(unknown).partial,true);
 });
